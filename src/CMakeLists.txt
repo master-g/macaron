@@ -1,9 +1,13 @@
 set(MACARON_SOURCE_FILES
-        wow.c
+        config_loader.c
+        toml.c
+        toml.h
 )
 
 set(MACARON_API_FILES
+        ../include/macaron/base.h
         ../include/macaron/macaron.h
+        ../include/macaron/types.h
 )
 
 # Hide internal functions
@@ -23,8 +27,7 @@ target_include_directories(macaron
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" PREFIX "src" FILES ${MACARON_SOURCE_FILES})
 source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../include" PREFIX "include" FILES ${MACARON_API_FILES})
 
-install(TARGETS box2d)
+install(TARGETS macaron)

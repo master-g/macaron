@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#include <macaron/macaron.h>
+#include "macaron/macaron.h"
 
 #define FRAME_DURATION (1/60.0)
 #define WORKER_COUNT 4
@@ -56,6 +56,8 @@ void Puck_DeSpawn(Puck *puck)
 
 typedef struct
 {
+    b2WorldDef worldDef;
+    b2WorldId worldId;
     Puck pucks[NUM_OF_PUCKS];
 } CarromState;
 
@@ -65,18 +67,8 @@ CarromState Carrom_CreateState(const b2WorldId worldId)
 
     for (int i = 0; i < NUM_OF_PUCKS; i++)
     {
-        state.pucks[i] = Puck_Spawn(worldId, PuckColor_White, b2Vec2_zero, NULL);
-    }
-
-    const float angle = b2_pi / 6.0f;
-    const float radius = 2.0f;
-
-    for (int i = 0; i < 6; i++)
-    {
-        const float x = radius * cosf(angle * i);
-        const float y = radius * sinf(angle * i);
-
-        state.pucks[i + 2] = Puck_Spawn(worldId, PuckColor_Red, b2Vec2(x, y), NULL);
+        void* index = (void*)(intptr_t)i;
+        state.pucks[i] = Puck_Spawn(worldId, PuckColor_White, b2Vec2_zero, index);
     }
 
     return state;
