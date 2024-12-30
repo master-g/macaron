@@ -9,13 +9,6 @@
 
 #define NUM_OF_PUCKS 19
 
-typedef enum PuckColor
-{
-    PuckColor_White,
-    PuckColor_Black,
-    PuckColor_Red,
-} PuckColor;
-
 #define PUCK_R 0.16f
 
 typedef struct
@@ -75,6 +68,8 @@ CarromState Carrom_CreateState(const b2WorldId worldId)
 }
 
 int main() {
+	CarromGameDef gameDef = CarromGameDefLoadFromToml("samples/config/carrom_config_example.toml");
+
     const int steps = 10000;
 
     b2WorldDef worldDef = b2DefaultWorldDef();

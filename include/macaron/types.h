@@ -1,12 +1,16 @@
 #pragma once
 
-#include <box2d/types.h>
+#include "base.h"
 
 #define NUM_OF_PUCKS 19
 
 // Box2D world def
 typedef struct CarromWorldDef
 {
+	// world size
+	float width;
+	// world height
+	float height;
 	// Box2D worker count, default is 4
 	int32_t workerCount;
 	// Box2D world step sub steps, default is 4

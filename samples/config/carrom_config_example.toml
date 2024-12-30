@@ -1,0 +1,31 @@
+[world]
+    width = 8.81
+    height = 8.81
+    workerCount = 4
+    subStep = 4
+    enableSleep = false
+    frameDuration = 0.016666
+
+[puck]
+    radius = 0.16
+    bodyLinearDamping = 1.8
+    bodyAngularDamping = 2.0
+    shapeFriction = 0.0
+    shapeRestitution = 1.0
+    shapeDensity = 0.45
+
+[pocket]
+    radius = 0.22
+
+[striker_limit]
+    width = 8.0
+    centerOffset = 4.0
+    maxForce = 150.0
+
+[striker]
+    radius = 0.2176
+    bodyLinearyDamping = 2.8
+    bodyAngularDamping = 5.0
+    shapeFriction = 0.0
+    shapeRestitution = 1.0
+    shapeDensity = 0.5

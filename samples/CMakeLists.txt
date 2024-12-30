@@ -10,3 +10,9 @@ set_target_properties(samples PROPERTIES
 
 target_include_directories(samples PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(samples PUBLIC macaron box2d)
+
+add_custom_command(
+        TARGET samples POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_CURRENT_SOURCE_DIR}/config/
+        ${CMAKE_CURRENT_BINARY_DIR}/config/)

@@ -23,6 +23,7 @@ target_include_directories(macaron
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
         $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}>
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        ${CMAKE_CURRENT_SOURCE_DIR}/../extern/box2d/include
         PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
