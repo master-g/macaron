@@ -28,6 +28,8 @@ typedef struct CarromPuckPhysicsDef
 {
 	// radius
 	float radius;
+	// gap
+	float gap;
 	// body linear damping
 	float bodyLinearDamping;
 	// body angular damping
@@ -112,6 +114,8 @@ typedef struct CarromGameDef
 } CarromGameDef;
 
 MACARON_API CarromGameDef CarromDefaultGameDef(void);
+
+MACARON_API void CarromGameDef_PlacePucks(CarromGameDef *def);
 
 // Puck instance
 typedef struct CarromPuck

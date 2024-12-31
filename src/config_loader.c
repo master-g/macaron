@@ -23,6 +23,8 @@ CarromPuckPhysicsDef CarromPuckPhysicsDefFromTomlTable(const toml_table_t* table
 	{
 		error("cannot read puck.radius", "");
 	}
+	const toml_datum_t puckGap = toml_double_in(table, "gap");
+
 	const toml_datum_t puckLinearDamping = toml_double_in(table, "bodyLinearDamping");
 	if (!puckLinearDamping.ok)
 	{
@@ -50,6 +52,7 @@ CarromPuckPhysicsDef CarromPuckPhysicsDefFromTomlTable(const toml_table_t* table
 	}
 
 	puckPhysicsDef.radius = (float)puckRadius.u.d;
+	puckPhysicsDef.gap = puckGap.ok ? (float)puckGap.u.d : 0.0f;
 	puckPhysicsDef.bodyLinearDamping = (float)puckLinearDamping.u.d;
 	puckPhysicsDef.bodyAngularDamping = (float)puckAngularDamping.u.d;
 	puckPhysicsDef.shapeFriction = (float)puckFriction.u.d;
@@ -188,7 +191,7 @@ CarromGameDef CarromGameDefLoadFromToml(const char* path)
 
 	CarromPuckPhysicsDef strikerPhysicsDef = CarromPuckPhysicsDefFromTomlTable(puckPhysicsTable);
 
-	CarromGameDef def = {0};
+	CarromGameDef def = CarromDefaultGameDef();
 	def.worldDef = worldDef;
 	def.puckPhysicsDef = puckPhysicsDef;
 	def.pocketDef = pocketDef;

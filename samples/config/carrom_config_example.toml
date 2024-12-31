@@ -8,6 +8,7 @@
 
 [puck]
     radius = 0.16
+    gap = 0.0001
     bodyLinearDamping = 1.8
     bodyAngularDamping = 2.0
     shapeFriction = 0.0
