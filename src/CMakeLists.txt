@@ -1,5 +1,6 @@
 set(MACARON_SOURCE_FILES
         config_loader.c
+        defaults.c
         toml.c
         toml.h
 )

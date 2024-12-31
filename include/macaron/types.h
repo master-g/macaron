@@ -21,6 +21,8 @@ typedef struct CarromWorldDef
 	float frameDuration;
 } CarromWorldDef;
 
+MACARON_API CarromWorldDef CarromDefaultWorldDef(void);
+
 // Puck physics def
 typedef struct CarromPuckPhysicsDef
 {
@@ -38,11 +40,17 @@ typedef struct CarromPuckPhysicsDef
 	float shapeDensity;
 } CarromPuckPhysicsDef;
 
+MACARON_API CarromPuckPhysicsDef CarromDefaultPuckPhysicsDef(void);
+
+MACARON_API CarromPuckPhysicsDef CarromDefaultStrikerPhysicsDef(void);
+
 // Pocket def
 typedef struct CarromPocketDef
 {
 	float radius;
 } CarromPocketDef;
+
+MACARON_API CarromPocketDef CarromDefaultPocketDef(void);
 
 // Object types
 typedef enum CarromObjectType
@@ -58,7 +66,7 @@ typedef enum CarromPuckColor
 	PuckColor_White,
 	PuckColor_Black,
 	PuckColor_Red,
-} PuckColor;
+} CarromPuckColor;
 
 // Puck position def
 typedef struct CarromPuckPositionDef
@@ -66,7 +74,7 @@ typedef struct CarromPuckPositionDef
 	// object index
 	int32_t index;
 	// color for pucks
-	PuckColor color;
+	CarromPuckColor color;
 	// position
 	b2Vec2 position;
 } CarromPuckPositionDef;
@@ -81,6 +89,8 @@ typedef struct CarromStrikerLimitDef
 	// maximum force when strike
 	float maxForce;
 } CarromStrikerLimitDef;
+
+MACARON_API CarromStrikerLimitDef CarromDefaultStrikerLimitDef(void);
 
 // Game def
 typedef struct CarromGameDef
@@ -100,3 +110,16 @@ typedef struct CarromGameDef
 	// pucks positions
 	CarromPuckPositionDef pucksPositions[NUM_OF_PUCKS];
 } CarromGameDef;
+
+MACARON_API CarromGameDef CarromDefaultGameDef(void);
+
+// Puck instance
+typedef struct CarromPuck
+{
+	// index, from 1 up to NUM_OF_PUCKS
+	int32_t index;
+	// color of this puck instance
+	CarromPuckColor color;
+	// body id in Box2D
+	b2BodyId bodyId;
+} CarromPuck;
