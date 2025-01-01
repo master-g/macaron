@@ -62,10 +62,22 @@ CarromGameState CarromGameState_New(const CarromGameDef* def)
 		const CarromPuckPositionDef posDef = def->pucksPositions[i];
 		puck.color = posDef.color;
 		puck.index = posDef.index;
-		puck.enabled = true;
 		puck.originPos = posDef.position;
 		CarromPuck_SetPosition(&puck, posDef.position);
 	}
 
 	return state;
+}
+
+void CarromGameState_Step(const CarromGameState* state)
+{
+	MACARON_ASSERT(state != NULL);
+	b2World_Step(state->worldId, state->def.worldDef.frameDuration, state->def.worldDef.subStep);
+}
+
+void CarromGameState_Destroy(CarromGameState *state)
+{
+	MACARON_ASSERT(state != NULL);
+	b2DestroyWorld(state->worldId);
+	state->worldId = b2_nullWorldId;
 }

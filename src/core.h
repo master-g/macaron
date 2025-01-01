@@ -2,6 +2,8 @@
 
 #include "../extern/box2d/src/core.h"
 
+#include <macaron/base.h>
+
 #if !defined( NDEBUG ) || defined( MACARON_ENABLE_ASSERT )
 extern MacaronAssertFcn* MacaronAssertHandler;
 	#define MACARON_ASSERT( condition )                                                                                               \

@@ -3,9 +3,9 @@
 #include "base.h"
 #include "types.h"
 
-MACARON_API CarromGameDef CarromGameDefLoadFromToml(const char* path);
+// Game def
 
-MACARON_API CarromGameState CarromGameState_New(const CarromGameDef *def);
+MACARON_API CarromGameDef CarromGameDefLoadFromToml(const char* path);
 
 // Pucks
 
@@ -18,3 +18,11 @@ MACARON_API bool CarromPuck_IsEnable(const CarromPuck *puck);
 MACARON_API void CarromPuck_SetIsEnable(CarromPuck *puck, bool enable);
 
 MACARON_API void CarromPuck_Reset(CarromPuck *puck);
+
+// Game state
+
+MACARON_API CarromGameState CarromGameState_New(const CarromGameDef *def);
+
+MACARON_API void CarromGameState_Step(const CarromGameState *state);
+
+MACARON_API void CarromGameState_Destroy(CarromGameState *state);

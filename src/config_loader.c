@@ -27,12 +27,12 @@ CarromPuckPhysicsDef CarromPuckPhysicsDefFromTomlTable(const toml_table_t* table
 	const toml_datum_t puckLinearDamping = toml_double_in(table, "bodyLinearDamping");
 	if (!puckLinearDamping.ok)
 	{
-		error("cannot read puck.linearDamping", "");
+		error("cannot read puck.bodyLinearDamping", "");
 	}
 	const toml_datum_t puckAngularDamping = toml_double_in(table, "bodyAngularDamping");
 	if (!puckAngularDamping.ok)
 	{
-		error("cannot read puck.angularDamping", "");
+		error("cannot read puck.bodyAngularDamping", "");
 	}
 	const toml_datum_t puckFriction = toml_double_in(table, "shapeFriction");
 	if (!puckFriction.ok)
@@ -47,7 +47,7 @@ CarromPuckPhysicsDef CarromPuckPhysicsDefFromTomlTable(const toml_table_t* table
 	const toml_datum_t puckDensity = toml_double_in(table, "shapeDensity");
 	if (!puckDensity.ok)
 	{
-		error("cannot read puck.density", "");
+		error("cannot read puck.shapeDensity", "");
 	}
 
 	puckPhysicsDef.radius = (float)puckRadius.u.d;
