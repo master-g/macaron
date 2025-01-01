@@ -124,10 +124,10 @@ typedef struct CarromPuck
 	int32_t index;
 	// color of this puck instance
 	CarromPuckColor color;
+	// original position
+	b2Vec2 originPos;
 	// body id in Box2D
 	b2BodyId bodyId;
-	// enabled, or alive
-	bool enabled;
 } CarromPuck;
 
 // Striker instance

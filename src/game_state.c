@@ -57,9 +57,14 @@ CarromGameState CarromGameState_New(const CarromGameDef* def)
 	// pucks
 	for (int i = 0; i < def->numOfPucks; i++)
 	{
-		state.pucks[i] = CarromPuck_New(state.worldId, &def->puckPhysicsDef);
+		CarromPuck puck = CarromPuck_New(state.worldId, &def->puckPhysicsDef);
+		state.pucks[i] = puck;
 		const CarromPuckPositionDef posDef = def->pucksPositions[i];
-		CarromPuck_SetPosition(&state.pucks[i], posDef.position);
+		puck.color = posDef.color;
+		puck.index = posDef.index;
+		puck.enabled = true;
+		puck.originPos = posDef.position;
+		CarromPuck_SetPosition(&puck, posDef.position);
 	}
 
 	return state;
