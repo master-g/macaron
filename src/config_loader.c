@@ -7,7 +7,6 @@
 
 #include "toml.h"
 
-
 static void error(const char* msg, const char* msg1)
 {
 	fprintf(stderr, "ERROR: %s%s\n", msg, msg1 ? msg1 : "");

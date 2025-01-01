@@ -7,7 +7,7 @@
 #define WORKER_COUNT 4
 #define SUB_STEPS 4
 
-#define NUM_OF_PUCKS 19
+#define MAX_PUCK_CAPACITY 19
 
 #define PUCK_R 0.16f
 
@@ -51,14 +51,14 @@ typedef struct
 {
     b2WorldDef worldDef;
     b2WorldId worldId;
-    Puck pucks[NUM_OF_PUCKS];
+    Puck pucks[MAX_PUCK_CAPACITY];
 } CarromState;
 
 CarromState Carrom_CreateState(const b2WorldId worldId)
 {
     CarromState state = { 0 };
 
-    for (int i = 0; i < NUM_OF_PUCKS; i++)
+    for (int i = 0; i < MAX_PUCK_CAPACITY; i++)
     {
         void* index = (void*)(intptr_t)i;
         state.pucks[i] = Puck_Spawn(worldId, PuckColor_White, b2Vec2_zero, index);

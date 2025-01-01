@@ -2,7 +2,7 @@
 
 #include "base.h"
 
-#define NUM_OF_PUCKS 19
+#define MAX_PUCK_CAPACITY 19
 
 // Box2D world def
 typedef struct CarromWorldDef
@@ -110,12 +110,12 @@ typedef struct CarromGameDef
 	// pucks count
 	int32_t numOfPucks;
 	// pucks positions
-	CarromPuckPositionDef pucksPositions[NUM_OF_PUCKS];
+	CarromPuckPositionDef pucksPositions[MAX_PUCK_CAPACITY];
 } CarromGameDef;
 
 MACARON_API CarromGameDef CarromDefaultGameDef(void);
 
-MACARON_API void CarromGameDef_PlacePucks(CarromGameDef *def);
+MACARON_API void CarromGameDef_PlacePucks(CarromGameDef* def);
 
 // Puck instance
 typedef struct CarromPuck
@@ -126,4 +126,30 @@ typedef struct CarromPuck
 	CarromPuckColor color;
 	// body id in Box2D
 	b2BodyId bodyId;
+	// enabled, or alive
+	bool enabled;
 } CarromPuck;
+
+// Striker instance
+typedef struct CarromStriker
+{
+	// Body id in Box2D
+	b2BodyId bodyId;
+} CarromStriker;
+
+// Game instance
+typedef struct CarromGameState
+{
+	// Game configurations
+	CarromGameDef def;
+
+	// world id in Box2D
+	b2WorldId worldId;
+
+	// number of pucks
+	int32_t numOfPucks;
+
+	// pucks
+	CarromPuck pucks[MAX_PUCK_CAPACITY];
+
+} CarromGameState;
