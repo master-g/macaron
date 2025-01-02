@@ -149,6 +149,9 @@ typedef struct CarromGameState
 	// world id in Box2D
 	b2WorldId worldId;
 
+	// wall bodyId
+	b2BodyId wallBodyId;
+
 	// number of pucks
 	int32_t numOfPucks;
 

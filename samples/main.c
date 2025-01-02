@@ -17,7 +17,7 @@ int main() {
 	struct timespec start, end;
 	timespec_get(&start, TIME_UTC);
 
-	const int steps = 10000;
+	const int steps = 512;
     for (int i = 0; i < steps; i++)
     {
     	CarromGameState_Step(&state);
