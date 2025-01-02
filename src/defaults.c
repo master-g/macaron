@@ -9,7 +9,7 @@ CarromWorldDef CarromDefaultWorldDef(void)
 	def.height = 8.81f;
 	def.workerCount = 4;
 	def.subStep = 4;
-	def.enableSleep = false;
+	def.disableSleep = false;
 	def.frameDuration = 1.0f / 60;
 	return def;
 }
@@ -99,8 +99,6 @@ CarromGameDef CarromDefaultGameDef(void)
 	def.pocketDef = CarromDefaultPocketDef();
 	def.strikerLimitDef = CarromDefaultStrikerLimitDef();
 	def.numOfPucks = 19;
-
-	CarromGameDef_PlacePucks(def.pucksPositions);
 
 	return def;
 }

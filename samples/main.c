@@ -1,25 +1,52 @@
 #include <stdio.h>
-#include <sys/time.h>
+#include <time.h>
 
 #include "macaron/macaron.h"
 
 int main() {
-	CarromGameDef gameDef = CarromGameDefLoadFromToml("samples/config/carrom_config_example.toml");
+	const CarromGameDef gameDef = CarromGameDefLoadFromToml("samples/config/carrom_config_example.toml");
+	for (int i = 0; i < gameDef.numOfPucks; i++)
+	{
+		const CarromPuckPositionDef posDef = gameDef.pucksPositions[i];
+		printf("idx: %d, color: %d, pos: (%.3f, %.3f)\n", posDef.index, posDef.color, posDef.position.x, posDef.position.y);
+	}
 	CarromGameState state = CarromGameState_New(&gameDef);
 
-    const time_t now = time(NULL);
+	b2World_Explode(state.worldId, b2Vec2_zero, 1.0f, 50.0f);
 
-	const int steps = 250;
+	struct timespec start, end;
+	timespec_get(&start, TIME_UTC);
+
+	const int steps = 10000;
     for (int i = 0; i < steps; i++)
     {
     	CarromGameState_Step(&state);
+    	const b2BodyEvents events = b2World_GetBodyEvents(state.worldId);
+    	if (events.moveCount == 0)
+    	{
+    		printf("no more moves, break early, steps: %d\n", i);
+    		break;
+    	}
     }
 
-    const time_t elapsed_ms = (time(NULL) - now) * 1000;
+	timespec_get(&end, TIME_UTC);
 
-    printf("Elapsed time: %ld ms\n", elapsed_ms);
+	double elapsed = (end.tv_sec - start.tv_sec);
+	elapsed += (end.tv_nsec - start.tv_nsec) / 1e9;
+
+	for (int i = 0; i < state.numOfPucks; i++)
+	{
+		const CarromPuck *puck = &state.pucks[i];
+		if (CarromPuck_IsEnable(puck))
+		{
+			const b2Vec2 pos = CarromPuck_GetPosition(puck);
+			printf("puck %d pos: (%.3f, %.3f)\n", puck->index, pos.x, pos.y);
+		}
+	}
 
 	CarromGameState_Destroy(&state);
+
+    printf("Elapsed time: %.9f s\n", elapsed);
 
 	return 0;
  }

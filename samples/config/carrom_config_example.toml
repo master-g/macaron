@@ -3,7 +3,7 @@ width = 8.81
 height = 8.81
 workerCount = 4
 subStep = 4
-enableSleep = false
+disableSleep = false
 frameDuration = 0.016666
 
 [puck]

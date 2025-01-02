@@ -15,8 +15,8 @@ typedef struct CarromWorldDef
 	int32_t workerCount;
 	// Box2D world step sub steps, default is 4
 	int32_t subStep;
-	// enable sleep, default is false
-	bool enableSleep;
+	// disable sleep, default is false
+	bool disableSleep;
 	// frame duration, default is 1/60.0
 	float frameDuration;
 } CarromWorldDef;
@@ -140,8 +140,11 @@ typedef struct CarromStriker
 // Game instance
 typedef struct CarromGameState
 {
-	// Game configurations
-	CarromGameDef def;
+	// frame duration
+	float frameDuration;
+
+	// subSteps
+	int32_t subSteps;
 
 	// world id in Box2D
 	b2WorldId worldId;

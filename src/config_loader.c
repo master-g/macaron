@@ -110,11 +110,8 @@ CarromGameDef CarromGameDefLoadFromToml(const char* path)
 	{
 		error("cannot read world.subStep", "");
 	}
-	const toml_datum_t enableSleep = toml_bool_in(world, "enableSleep");
-	if (!enableSleep.ok)
-	{
-		error("cannot read world.enableSleep", "");
-	}
+	const toml_datum_t disableSleep = toml_bool_in(world, "disableSleep");
+
 	const toml_datum_t frameDuration = toml_double_in(world, "frameDuration");
 	if (!frameDuration.ok)
 	{
@@ -125,7 +122,7 @@ CarromGameDef CarromGameDefLoadFromToml(const char* path)
 	worldDef.height = (float)height.u.d;
 	worldDef.workerCount = (int32_t)workerCount.u.i;
 	worldDef.subStep = (int32_t)subStep.u.i;
-	worldDef.enableSleep = enableSleep.u.b;
+	worldDef.disableSleep = disableSleep.ok ? disableSleep.u.b : false;
 	worldDef.frameDuration = (float)frameDuration.u.d;
 
 	// puck
@@ -196,6 +193,8 @@ CarromGameDef CarromGameDefLoadFromToml(const char* path)
 	def.pocketDef = pocketDef;
 	def.strikerLimitDef = strikerLimits;
 	def.strikerPhysicsDef = strikerPhysicsDef;
+
+	CarromGameDef_PlacePucks(&def);
 
 	return def;
 }

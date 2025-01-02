@@ -44,26 +44,30 @@ CarromGameState CarromGameState_New(const CarromGameDef* def)
 
 	MACARON_ASSERT(def->numOfPucks > 0);
 
+	state.frameDuration = def->worldDef.frameDuration;
+	state.subSteps = def->worldDef.subStep;
+
 	// world
 
 	b2WorldDef worldDef = b2DefaultWorldDef();
 	worldDef.workerCount = def->worldDef.workerCount;
-	worldDef.enableSleep = def->worldDef.enableSleep;
+	worldDef.enableSleep = !def->worldDef.disableSleep;
 	worldDef.enableContinous = true;
 	worldDef.gravity = b2Vec2_zero;
 
 	state.worldId = b2CreateWorld(&worldDef);
 
 	// pucks
+	state.numOfPucks = def->numOfPucks;
 	for (int i = 0; i < def->numOfPucks; i++)
 	{
 		CarromPuck puck = CarromPuck_New(state.worldId, &def->puckPhysicsDef);
-		state.pucks[i] = puck;
 		const CarromPuckPositionDef posDef = def->pucksPositions[i];
 		puck.color = posDef.color;
 		puck.index = posDef.index;
 		puck.originPos = posDef.position;
 		CarromPuck_SetPosition(&puck, posDef.position);
+		state.pucks[i] = puck;
 	}
 
 	return state;
@@ -71,8 +75,8 @@ CarromGameState CarromGameState_New(const CarromGameDef* def)
 
 void CarromGameState_Step(const CarromGameState* state)
 {
-	MACARON_ASSERT(state != NULL);
-	b2World_Step(state->worldId, state->def.worldDef.frameDuration, state->def.worldDef.subStep);
+	// MACARON_ASSERT(state != NULL);
+	b2World_Step(state->worldId, state->frameDuration, state->subSteps);
 }
 
 void CarromGameState_Destroy(CarromGameState *state)
