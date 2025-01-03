@@ -195,6 +195,7 @@ CarromGameDef CarromGameDefLoadFromToml(const char* path)
 	def.strikerPhysicsDef = strikerPhysicsDef;
 
 	CarromGameDef_PlacePucks(&def);
+	CarromGameDef_PlacePockets(&def);
 
 	return def;
 }

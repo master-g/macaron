@@ -44,8 +44,10 @@ CarromGameState CarromGameState_New(const CarromGameDef* def)
 
 	MACARON_ASSERT(def->numOfPucks > 0);
 
-	state.frameDuration = def->worldDef.frameDuration;
-	state.subSteps = def->worldDef.subStep;
+	state.worldDef = def->worldDef;
+	state.pocketDef = def->pocketDef;
+	state.puckPhysicsDef = def->puckPhysicsDef;
+	state.strikerPhysicsDef = def->strikerPhysicsDef;
 
 	// world
 	{
@@ -92,13 +94,26 @@ CarromGameState CarromGameState_New(const CarromGameDef* def)
 		}
 	}
 
+	// pockets
+	{
+		state.numOfPockets = def->numOfPockets;
+		for (int i = 0; i < def->numOfPockets; i++)
+		{
+			const CarromPocketPositionDef posDef = def->pocketsPositions[i];
+			const b2Circle circle = {posDef.position, def->pocketDef.radius};
+			b2ShapeDef shapeDef = b2DefaultShapeDef();
+			shapeDef.isSensor = true;
+			state.pockets[i] = b2CreateCircleShape(state.wallBodyId, &shapeDef, &circle);
+		}
+	}
+
 	return state;
 }
 
 void CarromGameState_Step(const CarromGameState* state)
 {
 	// MACARON_ASSERT(state != NULL);
-	b2World_Step(state->worldId, state->frameDuration, state->subSteps);
+	b2World_Step(state->worldId, state->worldDef.frameDuration, state->worldDef.subStep);
 }
 
 void CarromGameState_Destroy(CarromGameState* state)

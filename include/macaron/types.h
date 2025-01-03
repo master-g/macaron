@@ -3,6 +3,7 @@
 #include "base.h"
 
 #define MAX_PUCK_CAPACITY 19
+#define MAX_POCKET_CAPACITY 4
 
 // Box2D world def
 typedef struct CarromWorldDef
@@ -81,6 +82,15 @@ typedef struct CarromPuckPositionDef
 	b2Vec2 position;
 } CarromPuckPositionDef;
 
+// Pocket position def
+typedef struct CarromPocketPositionDef
+{
+	// pocket index
+	int32_t index;
+	// position
+	b2Vec2 position;
+} CarromPocketPositionDef;
+
 // Striker limitation def
 typedef struct CarromStrikerLimitDef
 {
@@ -107,6 +117,10 @@ typedef struct CarromGameDef
 	CarromPocketDef pocketDef;
 	// striker def
 	CarromStrikerLimitDef strikerLimitDef;
+	// pocket count
+	int32_t numOfPockets;
+	// pocket positions
+	CarromPocketPositionDef pocketsPositions[MAX_POCKET_CAPACITY];
 	// pucks count
 	int32_t numOfPucks;
 	// pucks positions
@@ -116,6 +130,8 @@ typedef struct CarromGameDef
 MACARON_API CarromGameDef CarromDefaultGameDef(void);
 
 MACARON_API void CarromGameDef_PlacePucks(CarromGameDef* def);
+
+MACARON_API void CarromGameDef_PlacePockets(CarromGameDef* state);
 
 // Puck instance
 typedef struct CarromPuck
@@ -140,17 +156,26 @@ typedef struct CarromStriker
 // Game instance
 typedef struct CarromGameState
 {
-	// frame duration
-	float frameDuration;
-
-	// subSteps
-	int32_t subSteps;
+	// world def
+	CarromWorldDef worldDef;
+	// puck physics def
+	CarromPuckPhysicsDef puckPhysicsDef;
+	// pocket def
+	CarromPocketDef pocketDef;
+	// striker physics def
+	CarromPuckPhysicsDef strikerPhysicsDef;
 
 	// world id in Box2D
 	b2WorldId worldId;
 
 	// wall bodyId
 	b2BodyId wallBodyId;
+
+	// number of pockets
+	int32_t numOfPockets;
+
+	// pockets
+	b2ShapeId pockets[MAX_POCKET_CAPACITY];
 
 	// number of pucks
 	int32_t numOfPucks;

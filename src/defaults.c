@@ -1,3 +1,5 @@
+#include "core.h"
+
 #include <macaron/types.h>
 
 #define SPI3 0.8660254037844386f
@@ -57,7 +59,12 @@ CarromStrikerLimitDef CarromDefaultStrikerLimitDef(void)
 
 void CarromGameDef_PlacePucks(CarromGameDef* def)
 {
-const float outR = def->puckPhysicsDef.radius + def->puckPhysicsDef.gap;
+	MACARON_ASSERT(def != NULL);
+
+	const float outR = def->puckPhysicsDef.radius + def->puckPhysicsDef.gap;
+
+	MACARON_ASSERT(outR > 0.0f);
+
 	const CarromPuckPositionDef posDefs[] = {
 		{1, PuckColor_Red, {0.0f, 0.0f}},
 
@@ -84,9 +91,37 @@ const float outR = def->puckPhysicsDef.radius + def->puckPhysicsDef.gap;
 		{19, PuckColor_Black, {0.0f, -outR * 4 * SPI3}},
 	};
 
-	for (int i = 0; i < 19; i++)
+	const int count = sizeof(posDefs) / sizeof(CarromPuckPositionDef);
+	for (int i = 0; i < count; i++)
 	{
 		def->pucksPositions[i] = posDefs[i];
+	}
+}
+
+void CarromGameDef_PlacePockets(CarromGameDef* def)
+{
+	MACARON_ASSERT(def != NULL);
+
+	const float r = def->pocketDef.radius;
+
+	MACARON_ASSERT(r > 0.0f);
+
+	const float w = def->worldDef.width;
+	const float h = def->worldDef.height;
+
+	MACARON_ASSERT(w > 0.0f && h > 0.0f);
+
+	const CarromPocketPositionDef posDefs[] = {
+		{1, {-w / 2 + r / 2, h / 2 - r / 2}},
+		{2, {w / 2 - r / 2, h / 2 - r / 2}},
+		{3, {-w / 2 + r / 2, -h / 2 + r / 2}},
+		{4, {w / 2 - r / 2, -h / 2 + r / 2}},
+	};
+
+	const int count = sizeof(posDefs) / sizeof(CarromPocketPositionDef);
+	for (int i = 0; i < count; i++)
+	{
+		def->pocketsPositions[i] = posDefs[i];
 	}
 }
 
@@ -99,6 +134,7 @@ CarromGameDef CarromDefaultGameDef(void)
 	def.pocketDef = CarromDefaultPocketDef();
 	def.strikerLimitDef = CarromDefaultStrikerLimitDef();
 	def.numOfPucks = 19;
+	def.numOfPockets = 4;
 
 	return def;
 }

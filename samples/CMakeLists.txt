@@ -1,4 +1,6 @@
 add_executable(samples
+        olive.c
+        stb_image_write.h
         main.c
 )
 
