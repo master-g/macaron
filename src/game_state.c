@@ -409,6 +409,26 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 	return pos;
 }
 
+bool CarromGameState_IsStrikerOverlapping(const CarromGameState* state, const b2Vec2 pos)
+{
+	const FindNearestPuckData data = CarromGameState_FindStrikerNearestPuck(state, pos);
+
+	const float strikerR = state->strikerPhysicsDef.radius;
+	const float puckR = state->puckPhysicsDef.radius;
+
+	if (data.found && data.minDistance < strikerR + puckR)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+void CarromGameState_Strike(const CarromGameState* state, CarromTablePosition tablePos, b2Vec2 impulse)
+{
+	// TODO: implement
+}
+
 void CarromGameState_Destroy(CarromGameState* state)
 {
 	MACARON_ASSERT(state != NULL);

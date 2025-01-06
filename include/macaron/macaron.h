@@ -77,6 +77,25 @@ MACARON_API b2Vec2 CarromGameState_PlacePuckToCenter(const CarromGameState* stat
 MACARON_API b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, CarromTablePosition tablePos, float x);
 
 /**
+ * @brief Check if the striker is overlapping with other pucks
+ *
+ * @param state game state
+ * @param pos position of the striker
+ *
+ * @return true if overlapping
+ */
+MACARON_API bool CarromGameState_IsStrikerOverlapping(const CarromGameState* state, b2Vec2 pos);
+
+/**
+ * @brief Apply force to the strike
+ *
+ * @param state game state
+ * @param tablePos position on the table
+ * @param impulse force and direction
+ */
+MACARON_API void CarromGameState_Strike(const CarromGameState* state, CarromTablePosition tablePos, b2Vec2 impulse);
+
+/**
  * @brief Destroy game state and free memory
  *
  * @param state game state
