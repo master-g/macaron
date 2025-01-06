@@ -71,6 +71,13 @@ typedef enum CarromPuckColor
 	PuckColor_Red,
 } CarromPuckColor;
 
+// Player position
+typedef enum CarromTablePosition
+{
+	CarromTablePosition_Top,
+	CarromTablePosition_Bottom,
+} CarromTablePosition;
+
 // Puck position def
 typedef struct CarromPuckPositionDef
 {
@@ -164,6 +171,8 @@ typedef struct CarromGameState
 	CarromPocketDef pocketDef;
 	// striker physics def
 	CarromPuckPhysicsDef strikerPhysicsDef;
+	// striker limit def
+	CarromStrikerLimitDef strikerLimitDef;
 
 	// world id in Box2D
 	b2WorldId worldId;
@@ -182,5 +191,8 @@ typedef struct CarromGameState
 
 	// pucks
 	CarromPuck pucks[MAX_PUCK_CAPACITY];
+
+	// striker
+	b2BodyId strikerBodyId;
 
 } CarromGameState;

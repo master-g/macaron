@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include <macaron/types.h>
 #include <macaron/macaron.h>
 
@@ -48,6 +50,7 @@ CarromGameState CarromGameState_New(const CarromGameDef* def)
 	state.pocketDef = def->pocketDef;
 	state.puckPhysicsDef = def->puckPhysicsDef;
 	state.strikerPhysicsDef = def->strikerPhysicsDef;
+	state.strikerLimitDef = def->strikerLimitDef;
 
 	// world
 	{
@@ -107,6 +110,27 @@ CarromGameState CarromGameState_New(const CarromGameDef* def)
 		}
 	}
 
+	// striker
+	{
+		b2BodyDef strikerDef = b2DefaultBodyDef();
+		strikerDef.type = b2_dynamicBody;
+		strikerDef.isBullet = true;
+		strikerDef.linearDamping = def->strikerPhysicsDef.bodyLinearDamping;
+		strikerDef.angularDamping = def->strikerPhysicsDef.bodyAngularDamping;
+		strikerDef.position = b2Vec2_zero;
+		strikerDef.isEnabled = false;
+
+		b2ShapeDef shapeDef = b2DefaultShapeDef();
+		shapeDef.friction = def->strikerPhysicsDef.shapeFriction;
+		shapeDef.restitution = def->strikerPhysicsDef.shapeRestitution;
+		shapeDef.density = def->strikerPhysicsDef.shapeDensity;
+
+		state.strikerBodyId = b2CreateBody(state.worldId, &strikerDef);
+
+		b2Circle circle = {{0.0f, 0.0f}, def->strikerPhysicsDef.radius};
+		b2CreateCircleShape(state.strikerBodyId, &shapeDef, &circle);
+	}
+
 	return state;
 }
 
@@ -114,6 +138,275 @@ void CarromGameState_Step(const CarromGameState* state)
 {
 	// MACARON_ASSERT(state != NULL);
 	b2World_Step(state->worldId, state->worldDef.frameDuration, state->worldDef.subStep);
+}
+
+typedef struct
+{
+	bool found;
+	float minDistance;
+	b2Vec2 nearestPos;
+} FindNearestPuckData;
+
+FindNearestPuckData CarromGameState_FindNearestPuck(const CarromGameState* state, const CarromPuck* target,
+                                                    const b2Vec2 pos)
+{
+	float minDistance = state->worldDef.width + state->worldDef.height;
+	FindNearestPuckData result = {false, minDistance, b2Vec2_zero};
+
+	for (int i = 0; i < state->numOfPucks; i++)
+	{
+		const CarromPuck* puck = &state->pucks[i];
+		if (puck == target || !b2Body_IsEnabled(puck->bodyId))
+		{
+			continue;
+		}
+
+		const b2Vec2 puckPos = b2Body_GetPosition(puck->bodyId);
+		const float distance = b2Distance(puckPos, pos);
+		if (distance < minDistance)
+		{
+			minDistance = distance;
+			result.found = true;
+			result.nearestPos = puckPos;
+			result.minDistance = distance;
+		}
+	}
+
+	return result;
+}
+
+b2Vec2 CarromGameState_PlacePuck(const CarromGameState* state, const CarromPuck* puck, const float step)
+{
+	const b2Vec2 targetPos = b2Body_GetPosition(puck->bodyId);
+	const FindNearestPuckData nearestData = CarromGameState_FindNearestPuck(state, puck, targetPos);
+
+	if (!nearestData.found)
+	{
+		// printf("CarromGameState_PlacePuck cannot find nearest puck\n");
+		return targetPos;
+	}
+
+	const float r = state->puckPhysicsDef.radius;
+	if (nearestData.minDistance > r * 2)
+	{
+		// printf("CarromGameState_PlacePuck no overlaps\n");
+		return targetPos;
+	}
+
+	const b2Circle circleSrc = {{0.0f, 0.0f}, r};
+	const b2Circle circleDst = {{0.0f, 0.0f}, r};
+
+	const b2Transform transformSrc = {targetPos, b2Rot_identity};
+	const b2Transform transformDst = {nearestData.nearestPos, b2Rot_identity};
+
+	const b2Manifold m = b2CollideCircles(&circleSrc, transformSrc, &circleDst, transformDst);
+	if (m.pointCount > 0)
+	{
+		const float pushOut = (r * 2) - nearestData.minDistance + 0.001f;
+		b2Vec2 sepVec = b2MulSV(pushOut, b2Normalize(m.normal));
+
+		if (pushOut < 0.00001f || b2Length(sepVec) < 0.00001f)
+		{
+			sepVec.x = 1.0f;
+			sepVec.y = 0.0f;
+		}
+
+		b2Body_SetTransform(puck->bodyId, b2Add(targetPos, sepVec), b2Rot_identity);
+
+		const b2Vec2 stepVec = b2MulSV(step, b2Normalize(sepVec));
+
+		while (true)
+		{
+			const b2Vec2 placePos = b2Body_GetPosition(puck->bodyId);
+			const FindNearestPuckData data = CarromGameState_FindNearestPuck(state, puck, placePos);
+			if (!data.found || data.minDistance > r * 2)
+			{
+				return placePos;
+			}
+
+			const b2Vec2 newPos = b2Add(placePos, stepVec);
+			b2Body_SetTransform(puck->bodyId, newPos, b2Rot_identity);
+		}
+	}
+
+	return targetPos;
+}
+
+b2Vec2 CarromGameState_PlacePuckToCenter(const CarromGameState* state, const int index)
+{
+	MACARON_ASSERT(index >= 0 && index < state->numOfPucks);
+
+	const CarromPuck* puck = &state->pucks[index];
+
+	b2Body_SetTransform(puck->bodyId, b2Vec2_zero, b2Rot_identity);
+
+	if (!b2Body_IsEnabled(puck->bodyId))
+	{
+		return b2Vec2_zero;
+	}
+
+	return CarromGameState_PlacePuck(state, puck, 0.001f);
+}
+
+FindNearestPuckData CarromGameState_FindStrikerNearestPuck(const CarromGameState* state, const b2Vec2 pos)
+{
+	float minDistance = state->worldDef.width + state->worldDef.height;
+
+	FindNearestPuckData result = {false, minDistance, b2Vec2_zero};
+
+	for (int i = 0; i < state->numOfPucks; i++)
+	{
+		const CarromPuck* puck = &state->pucks[i];
+		if (!b2Body_IsEnabled(puck->bodyId))
+		{
+			continue;
+		}
+
+		const b2Vec2 puckPos = b2Body_GetPosition(puck->bodyId);
+		const float distance = b2Distance(puckPos, pos);
+		if (distance < minDistance)
+		{
+			minDistance = distance;
+			result.found = true;
+			result.nearestPos = puckPos;
+			result.minDistance = distance;
+		}
+	}
+
+	return result;
+}
+
+b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTablePosition tablePos, const float x)
+{
+	b2Vec2 pos = {x, 0.0f};
+	if (tablePos == CarromTablePosition_Top)
+	{
+		pos.y = state->strikerLimitDef.centerOffset;
+	}
+	else
+	{
+		pos.y = -state->strikerLimitDef.centerOffset;
+	}
+
+	const float strikerLimitWidth = state->strikerLimitDef.width;
+	const float left = -strikerLimitWidth / 2;
+	const float right = strikerLimitWidth / 2;
+
+	if (pos.x < left)
+	{
+		pos.x = left;
+	}
+	else if (pos.x > right)
+	{
+		pos.x = right;
+	}
+
+	b2Body_SetTransform(state->strikerBodyId, pos, b2Rot_identity);
+
+	const FindNearestPuckData nearestData = CarromGameState_FindStrikerNearestPuck(state, pos);
+	if (!nearestData.found)
+	{
+		return pos;
+	}
+
+	const float puckR = state->puckPhysicsDef.radius;
+	const float strikerR = state->strikerPhysicsDef.radius;
+
+	if (nearestData.minDistance > puckR + strikerR)
+	{
+		return pos;
+	}
+
+	// got overlap
+	const b2Circle circleStriker = {{0.0f, 0.0f}, strikerR};
+	const b2Circle circlePuck = {{0.0f, 0.0f}, puckR};
+
+	const b2Transform transformStriker = {pos, b2Rot_identity};
+	const b2Transform transformPuck = {nearestData.nearestPos, b2Rot_identity};
+
+	const b2Manifold m = b2CollideCircles(&circleStriker, transformStriker, &circlePuck, transformPuck);
+	if (m.pointCount > 0)
+	{
+		const float pushOut = (strikerR + puckR) - nearestData.minDistance + 0.001f;
+		const float normalX = m.normal.x;
+
+		float sepX;
+		float direction;
+
+		if (normalX == 0.f)
+		{
+			direction = 1.0f;
+		}
+		else
+		{
+			direction = normalX > 0.0f ? 1.0f : -1.0f;
+		}
+
+		if (pushOut < 0.00001f || b2AbsFloat(normalX) < 0.00001f)
+		{
+			sepX = direction * 0.001f;
+		}
+		else
+		{
+			sepX = pushOut * normalX;
+		}
+
+		b2Vec2 after;
+		after.x = pos.x + sepX;
+		after.y = pos.y;
+
+		if (after.x < left)
+		{
+			after.x = left;
+		}
+		else if (after.x > right)
+		{
+			after.x = right;
+		}
+
+		b2Body_SetTransform(state->strikerBodyId, after, b2Rot_identity);
+
+		bool reversed = false;
+
+		while (true)
+		{
+			const float stepX = 0.001f;
+			const b2Vec2 placePos = b2Body_GetPosition(state->strikerBodyId);
+			const FindNearestPuckData data = CarromGameState_FindStrikerNearestPuck(state, placePos);
+			if (!data.found || data.minDistance > strikerR + puckR)
+			{
+				return placePos;
+			}
+
+			b2Vec2 newPos = placePos;
+			newPos.x += stepX * direction;
+			if (newPos.x < left)
+			{
+				newPos.x = left;
+				if (reversed)
+				{
+					printf("CarromGameState_PlaceStriker reversed\n");
+					return pos;
+				}
+				direction = -direction;
+				reversed = true;
+			}
+			else if (newPos.x > right)
+			{
+				newPos.x = right;
+				if (reversed)
+				{
+					printf("CarromGameState_PlaceStriker reversed\n");
+					return pos;
+				}
+				direction = -direction;
+				reversed = true;
+			}
+			b2Body_SetTransform(state->strikerBodyId, newPos, b2Rot_identity);
+		}
+	}
+
+	return pos;
 }
 
 void CarromGameState_Destroy(CarromGameState* state)

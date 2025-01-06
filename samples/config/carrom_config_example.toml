@@ -19,8 +19,8 @@ shapeDensity = 0.45
 radius = 0.22
 
 [striker_limit]
-width = 8.0
-centerOffset = 4.0
+width = 6.0
+centerOffset = 3.0
 maxForce = 150.0
 
 [striker]
