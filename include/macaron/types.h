@@ -4,6 +4,7 @@
 
 #define MAX_PUCK_CAPACITY 19
 #define MAX_POCKET_CAPACITY 4
+#define MAX_FRAME_CAPACITY 512
 
 // Box2D world def
 typedef struct CarromWorldDef
@@ -20,6 +21,7 @@ typedef struct CarromWorldDef
 	bool disableSleep;
 	// frame duration, default is 1/60.0
 	float frameDuration;
+
 } CarromWorldDef;
 
 MACARON_API CarromWorldDef CarromDefaultWorldDef(void);
@@ -41,6 +43,7 @@ typedef struct CarromPuckPhysicsDef
 	float shapeRestitution;
 	// shape density
 	float shapeDensity;
+
 } CarromPuckPhysicsDef;
 
 MACARON_API CarromPuckPhysicsDef CarromDefaultPuckPhysicsDef(void);
@@ -51,6 +54,7 @@ MACARON_API CarromPuckPhysicsDef CarromDefaultStrikerPhysicsDef(void);
 typedef struct CarromPocketDef
 {
 	float radius;
+
 } CarromPocketDef;
 
 MACARON_API CarromPocketDef CarromDefaultPocketDef(void);
@@ -61,14 +65,16 @@ typedef enum CarromObjectType
 	CarromObjectType_Puck,
 	CarromObjectType_Striker,
 	CarromObjectType_Pocket,
+
 } CarromObjectType;
 
 // Puck color
 typedef enum CarromPuckColor
 {
-	PuckColor_White,
-	PuckColor_Black,
-	PuckColor_Red,
+	CarromPuckColor_White,
+	CarromPuckColor_Black,
+	CarromPuckColor_Red,
+
 } CarromPuckColor;
 
 // Player position
@@ -76,6 +82,7 @@ typedef enum CarromTablePosition
 {
 	CarromTablePosition_Top,
 	CarromTablePosition_Bottom,
+
 } CarromTablePosition;
 
 // Puck position def
@@ -85,6 +92,7 @@ typedef struct CarromPuckPositionDef
 	CarromPuckColor color;
 	// position
 	b2Vec2 position;
+
 } CarromPuckPositionDef;
 
 // Pocket position def
@@ -145,14 +153,8 @@ typedef struct CarromPuck
 	CarromPuckColor color;
 	// body id in Box2D
 	b2BodyId bodyId;
-} CarromPuck;
 
-// Striker instance
-typedef struct CarromStriker
-{
-	// Body id in Box2D
-	b2BodyId bodyId;
-} CarromStriker;
+} CarromPuck;
 
 // Game instance
 typedef struct CarromGameState
@@ -197,19 +199,60 @@ typedef struct CarromGameState
 
 } CarromGameState;
 
+// Puck object snapshot
 typedef struct CarromPuckSnapshot
 {
 	// object index
 	int32_t index;
 	// position
 	b2Vec2 position;
+
 } CarromPuckSnapshot;
 
-// Game object position
+// Game state snapshot, object position
 typedef struct CarromStateSnapshot
 {
 	// number of enabled pucks
 	int numOfEnabledPucks;
 	// enabled pucks
 	CarromPuckSnapshot enabledPucks[MAX_PUCK_CAPACITY];
+
 } CarromStateSnapshot;
+
+// Carrom object movement
+typedef struct CarromObjectMovement
+{
+	// object type
+	CarromObjectType type;
+	// object index
+	int32_t index;
+	// object position
+	b2Vec2 position;
+	// hit pocket
+	bool hitPocket;
+	// hit other object
+	bool hitObject;
+
+} CarromObjectMovement;
+
+// Single frame of the carrom game
+typedef struct CarromFrame
+{
+	// frame index
+	int32_t index;
+	// number of moving objects
+	int32_t movementCount;
+	// moving objects
+	CarromObjectMovement movements[MAX_PUCK_CAPACITY + 1];
+
+} CarromFrame;
+
+// Frames
+typedef struct CarromEvalResult
+{
+	// number of frames
+	int32_t frameCount;
+	// frames
+	CarromFrame frames[MAX_FRAME_CAPACITY];
+
+} CarromEvalResult;

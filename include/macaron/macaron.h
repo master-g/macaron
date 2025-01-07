@@ -20,6 +20,24 @@ MACARON_API CarromGameDef CarromGameDefLoadFromToml(const char* path);
 MACARON_API CarromGameState CarromGameState_New(const CarromGameDef* def);
 
 /**
+ * @brief Check if the game state has movement
+ *
+ * @param state game state
+ *
+ * @return true if current state has movement
+ */
+MACARON_API bool CarromGameState_HasMovement(const CarromGameState* state);
+
+/**
+ *@brief Check if the game state has sensor events
+ *
+ * @param state game state
+ *
+ * @return true if current state has sensor events
+ */
+MACARON_API bool CarromGameState_HasSensorEvents(const CarromGameState* state);
+
+/**
  * @brief Step game state, make updates
  *
  * @param state game state
@@ -35,6 +53,16 @@ MACARON_API void CarromGameState_Step(const CarromGameState* state);
  * @return puck position
  */
 MACARON_API b2Vec2 CarromGameState_GetPuckPosition(const CarromGameState* state, int index);
+
+/**
+ * @brief Get puck color
+ *
+ * @param state game state
+ * @param index puck index
+ *
+ * @return puck color
+ */
+MACARON_API CarromPuckColor CarromGameState_GetPuckColor(const CarromGameState* state, int index);
 
 /**
  * @brief Get striker position
@@ -136,6 +164,16 @@ MACARON_API CarromStateSnapshot CarromGameState_TakeSnapshot(const CarromGameSta
  * @param recreate recreate the game state
  */
 MACARON_API void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromStateSnapshot* snapshot, bool recreate);
+
+/**
+ * @brief Let the game state steps until no more movements
+ *
+ * @param state game state
+ * @param maxSteps maximum steps allowed, should be smaller than MAX_FRAME_CAPACITY
+ *
+ * @return evaluation result
+ */
+MACARON_API CarromEvalResult CarromGameState_Eval(const CarromGameState* state, int maxSteps);
 
 /**
  * @brief Destroy game state and free memory

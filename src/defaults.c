@@ -70,29 +70,29 @@ void CarromGameDef_PlacePucks(CarromGameDef* def)
 	MACARON_ASSERT(outR > 0.0f);
 
 	const CarromPuckPositionDef posDefs[] = {
-		{PuckColor_Red, {0.0f, 0.0f}},
+		{CarromPuckColor_Red, {0.0f, 0.0f}},
 
-		{PuckColor_White, {-outR * 4, 0.0f}},
-		{PuckColor_White, {outR * 2, 0.0f}},
-		{PuckColor_White, {outR * 4, 0.0f}},
-		{PuckColor_White, {-outR * 2 * 0.5f, outR * 2 * SPI3}},
-		{PuckColor_White, {-outR * 4 * 0.5f, outR * 4 * SPI3}},
-		{PuckColor_White, {-outR * 2 * 0.5f, -outR * 2 * SPI3}},
-		{PuckColor_White, {-outR * 4 * 0.5f, -outR * 4 * SPI3}},
-		{PuckColor_White, {outR * 4 * 0.5f, -outR * 4 * SPI3}},
-		{PuckColor_White, {outR * 4 * 0.5f, outR * 4 * SPI3}},
+		{CarromPuckColor_White, {-outR * 4, 0.0f}},
+		{CarromPuckColor_White, {outR * 2, 0.0f}},
+		{CarromPuckColor_White, {outR * 4, 0.0f}},
+		{CarromPuckColor_White, {-outR * 2 * 0.5f, outR * 2 * SPI3}},
+		{CarromPuckColor_White, {-outR * 4 * 0.5f, outR * 4 * SPI3}},
+		{CarromPuckColor_White, {-outR * 2 * 0.5f, -outR * 2 * SPI3}},
+		{CarromPuckColor_White, {-outR * 4 * 0.5f, -outR * 4 * SPI3}},
+		{CarromPuckColor_White, {outR * 4 * 0.5f, -outR * 4 * SPI3}},
+		{CarromPuckColor_White, {outR * 4 * 0.5f, outR * 4 * SPI3}},
 
-		{PuckColor_Black, {-outR * 2, 0.0f}},
-		{PuckColor_Black, {-outR * 3, outR * 2 * SPI3}},
-		{PuckColor_Black, {-outR * 3, -outR * 2 * SPI3}},
+		{CarromPuckColor_Black, {-outR * 2, 0.0f}},
+		{CarromPuckColor_Black, {-outR * 3, outR * 2 * SPI3}},
+		{CarromPuckColor_Black, {-outR * 3, -outR * 2 * SPI3}},
 
-		{PuckColor_Black, {outR, outR * 2 * SPI3}},
-		{PuckColor_Black, {outR * 3, outR * 2 * SPI3}},
-		{PuckColor_Black, {outR * 3, -outR * 2 * SPI3}},
-		{PuckColor_Black, {outR, -outR * 2 * SPI3}},
+		{CarromPuckColor_Black, {outR, outR * 2 * SPI3}},
+		{CarromPuckColor_Black, {outR * 3, outR * 2 * SPI3}},
+		{CarromPuckColor_Black, {outR * 3, -outR * 2 * SPI3}},
+		{CarromPuckColor_Black, {outR, -outR * 2 * SPI3}},
 
-		{PuckColor_Black, {0.0f, outR * 4 * SPI3}},
-		{PuckColor_Black, {0.0f, -outR * 4 * SPI3}},
+		{CarromPuckColor_Black, {0.0f, outR * 4 * SPI3}},
+		{CarromPuckColor_Black, {0.0f, -outR * 4 * SPI3}},
 	};
 
 	const int count = sizeof(posDefs) / sizeof(CarromPuckPositionDef);

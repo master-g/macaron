@@ -37,14 +37,13 @@ void sample_place_striker()
 	const CarromGameState state = new_game_state();
 	for (int i = 0; i < 10; i++)
 	{
-		const CarromPuck* puck = &state.pucks[i];
 		b2Vec2 pos = b2Vec2_zero;
 		pos.y = state.strikerLimitDef.centerOffset;
 		const float sign = i % 2 == 0 ? -1.f : 1.f;
 		const float dist = state.strikerPhysicsDef.radius * 2.f + state.puckPhysicsDef.radius;
 		pos.x = sign * dist * (float)i / 2;
 
-		CarromGameState_PlacePuckToPosUnsafe(&state, puck->index, pos);
+		CarromGameState_PlacePuckToPosUnsafe(&state, i, pos);
 	}
 
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, 0.0f);
@@ -140,9 +139,81 @@ void sample_take_snapshot()
 	dump_game_state_to_png(&newState2, "sample_take_snapshot_3.png");
 }
 
+b2Vec2 find_pocket_impulse()
+{
+	const b2Vec2 initialImpulse = {-150.0f, 0.0f};
+	const float rotStep = M_PI / 180.0f;
+	float rot = 0.0f;
+
+	while (true)
+	{
+		const b2Rot bRot = b2MakeRot(rot);
+		rot += rotStep;
+
+		const b2Vec2 impulse = b2RotateVector(bRot, initialImpulse);
+
+		const CarromGameState state = new_game_state();
+		// strike!
+		CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, 0.0f);
+		CarromGameState_Strike(&state, impulse);
+
+		// eval
+		const CarromEvalResult result = CarromGameState_Eval(&state, 0);
+
+		for (int i = 0; i < result.frameCount; i++)
+		{
+			const CarromFrame* frame = &result.frames[i];
+			for (int j = 0; j < frame->movementCount; j++)
+			{
+				const CarromObjectMovement* movement = &frame->movements[j];
+				if (movement->hitPocket && movement->type == CarromObjectType_Puck)
+				{
+					return impulse;
+				}
+			}
+		}
+	}
+}
+
+void sample_eval()
+{
+	// b2Vec2 impulse = find_pocket_impulse();
+	// printf("impulse found: (%.3f, %.3f)\n", impulse.x, impulse.y);
+
+	const b2Vec2 impulse = {-28.621f, -148.244f};
+
+	// new state
+	const CarromGameState state = new_game_state();
+
+	// strike!
+	CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, 0.0f);
+	CarromGameState_Strike(&state, impulse);
+
+	// eval
+	const CarromEvalResult result = CarromGameState_Eval(&state, 0);
+	printf("frame count: %d\n", result.frameCount);
+
+	for (int i = 0; i < result.frameCount; i++)
+	{
+		const CarromFrame* frame = &result.frames[i];
+		for (int j = 0; j < frame->movementCount; j++)
+		{
+			const CarromObjectMovement* movement = &frame->movements[j];
+			if (movement->hitPocket)
+			{
+				printf("frame: %d, movement: %d, hit pocket\n", i, j);
+			}
+		}
+	}
+
+	dump_game_state_to_png(&state, "sample_eval.png");
+}
+
 int main(int argc, char** argv)
 {
-	sample_take_snapshot();
+	// sample_take_snapshot();
+	// sample_userdata();
+	sample_eval();
 
 	return 0;
 }

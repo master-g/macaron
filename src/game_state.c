@@ -112,6 +112,8 @@ void CarromGameState_CreateImpl(CarromGameState* state,
 			b2Body_SetTransform(puck.bodyId, posDef.position, b2Rot_identity);
 			state->pucks[i] = puck;
 			state->pucksPositionDefs[i] = posDef;
+
+			b2Body_SetUserData(puck.bodyId, (void*)(intptr_t)i);
 		}
 	}
 
@@ -174,6 +176,44 @@ CarromGameState CarromGameState_New(const CarromGameDef* def)
 	return state;
 }
 
+bool CarromGameState_HasMovement(const CarromGameState* state)
+{
+	MACARON_ASSERT(state != NULL);
+	if (state == NULL)
+	{
+		return false;
+	}
+
+	MACARON_ASSERT(b2World_IsValid(state->worldId));
+
+	const b2BodyEvents bodyEvents = b2World_GetBodyEvents(state->worldId);
+	if (bodyEvents.moveCount > 0)
+	{
+		return true;
+	}
+
+	return false;
+}
+
+bool CarromGameState_HasSensorEvents(const CarromGameState* state)
+{
+	MACARON_ASSERT(state != NULL);
+	if (state == NULL)
+	{
+		return false;
+	}
+
+	MACARON_ASSERT(b2World_IsValid(state->worldId));
+
+	const b2SensorEvents sensorEvents = b2World_GetSensorEvents(state->worldId);
+	if (sensorEvents.beginCount > 0 || sensorEvents.endCount > 0)
+	{
+		return true;
+	}
+
+	return false;
+}
+
 void CarromGameState_Step(const CarromGameState* state)
 {
 	// MACARON_ASSERT(state != NULL);
@@ -213,6 +253,19 @@ FindNearestPuckData CarromGameState_FindNearestPuck(const CarromGameState* state
 	}
 
 	return result;
+}
+
+CarromPuckColor CarromGameState_GetPuckColor(const CarromGameState* state, const int index)
+{
+	MACARON_ASSERT(state != NULL);
+	MACARON_ASSERT(index >= 0 && index < state->numOfPucks);
+	if (state == NULL)
+	{
+		return CarromPuckColor_White;
+	}
+
+	const CarromPuck* puck = &state->pucks[index];
+	return puck->color;
 }
 
 b2Vec2 CarromGameState_GetPuckPosition(const CarromGameState* state, const int index)
@@ -599,6 +652,166 @@ void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromStateSnap
 		b2Body_Enable(puck->bodyId);
 		b2Body_SetTransform(puck->bodyId, puckSnapshot->position, b2Rot_identity);
 	}
+}
+
+/**
+ * NOTE: WE ASSUME THAT THERE ARE ONLY TWO TYPES OF MOVING OBJECTS:
+ * 1. STRIKER
+ * 2. PUCK
+ * ANY OTHER OBJECTS SHOULD NOT BE DYNAMIC
+ *
+ * @param state Game state
+ * @param output Output frame
+ */
+void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* output)
+{
+	bool strikerHitPocket = false;
+	bool pucksHitPocket[MAX_PUCK_CAPACITY] = {0};
+	bool strikerHitOtherObject = false;
+	bool pucksHitOtherObject[MAX_PUCK_CAPACITY] = {0};
+
+	// sensor events
+	const b2SensorEvents sensorEvents = b2World_GetSensorEvents(state->worldId);
+	if (sensorEvents.beginCount > 0)
+	{
+		for (int i = 0; i < sensorEvents.beginCount; i++)
+		{
+			const b2SensorBeginTouchEvent* sensorEvent = &sensorEvents.beginEvents[i];
+			const b2ShapeId visitorId = sensorEvent->visitorShapeId;
+			const b2BodyId bodyId = b2Shape_GetBody(visitorId);
+
+			if (B2_ID_EQUALS(bodyId, state->strikerBodyId))
+			{
+				// striker hits the sensor, foul
+				strikerHitPocket = true;
+
+				// disable striker
+				b2Body_Disable(state->strikerBodyId);
+			}
+			else
+			{
+				// puck hits the sensor
+				const int32_t puckIndex = (int32_t)(intptr_t)b2Body_GetUserData(bodyId);
+				MACARON_ASSERT(puckIndex >= 0 && puckIndex < state->numOfPucks);
+				pucksHitPocket[puckIndex] = true;
+
+				// disable puck
+				b2Body_Disable(state->pucks[puckIndex].bodyId);
+			}
+		}
+	}
+
+	// dump contacts
+	const b2ContactEvents contactEvents = b2World_GetContactEvents(state->worldId);
+	if (contactEvents.beginCount > 0)
+	{
+		for (int i = 0; i < contactEvents.beginCount; i++)
+		{
+			const b2ContactBeginTouchEvent* contactEvent = &contactEvents.beginEvents[i];
+			const b2ShapeId shapeIdA = contactEvent->shapeIdA;
+			const b2ShapeId shapeIdB = contactEvent->shapeIdB;
+
+			const b2BodyId bodyIdA = b2Shape_GetBody(shapeIdA);
+			const b2BodyId bodyIdB = b2Shape_GetBody(shapeIdB);
+
+			b2BodyId strikerBodyId = b2_nullBodyId;
+			b2BodyId puckBodyId = b2_nullBodyId;
+
+			if (B2_ID_EQUALS(bodyIdA, state->strikerBodyId))
+			{
+				strikerBodyId = bodyIdA;
+			}
+			else if (!B2_ID_EQUALS(bodyIdA, state->wallBodyId))
+			{
+				puckBodyId = bodyIdA;
+			}
+
+			if (B2_ID_EQUALS(bodyIdB, state->strikerBodyId))
+			{
+				strikerBodyId = bodyIdB;
+			}
+			else if (!B2_ID_EQUALS(bodyIdB, state->wallBodyId))
+			{
+				puckBodyId = bodyIdB;
+			}
+
+			if (B2_IS_NON_NULL(strikerBodyId))
+			{
+				strikerHitOtherObject = true;
+			}
+			if (B2_IS_NON_NULL(puckBodyId))
+			{
+				const int32_t puckIndex = (int32_t)(intptr_t)b2Body_GetUserData(puckBodyId);
+				MACARON_ASSERT(puckIndex >= 0 && puckIndex < state->numOfPucks);
+				pucksHitOtherObject[puckIndex] = true;
+			}
+		}
+	}
+
+	// dump movements
+	const b2BodyEvents bodyEvents = b2World_GetBodyEvents(state->worldId);
+	if (bodyEvents.moveCount > 0)
+	{
+		for (int i = 0; i < bodyEvents.moveCount; i++)
+		{
+			const b2BodyMoveEvent* bodyMoveEvent = &bodyEvents.moveEvents[i];
+			CarromObjectMovement* movement = &output->movements[output->movementCount];
+			movement->index = output->movementCount;
+			movement->position = bodyMoveEvent->transform.p;
+
+			if (B2_ID_EQUALS(bodyMoveEvent->bodyId, state->strikerBodyId))
+			{
+				// striker moves
+				movement->type = CarromObjectType_Striker;
+				movement->hitPocket = strikerHitPocket;
+				movement->hitObject = strikerHitOtherObject;
+			}
+			else
+			{
+				// puck moves
+				const int32_t puckIndex = (int32_t)(intptr_t)b2Body_GetUserData(bodyMoveEvent->bodyId);
+				movement->type = CarromObjectType_Puck;
+				movement->hitPocket = pucksHitPocket[puckIndex];
+				movement->hitObject = pucksHitOtherObject[puckIndex];
+			}
+
+			output->movementCount++;
+		}
+	}
+}
+
+CarromEvalResult CarromGameState_Eval(const CarromGameState* state, const int maxSteps)
+{
+	MACARON_ASSERT(state != NULL);
+	MACARON_ASSERT(maxSteps <= MAX_FRAME_CAPACITY);
+	MACARON_ASSERT(b2World_IsValid(state->worldId));
+
+	CarromEvalResult result = {0};
+
+	const int caps = maxSteps == 0 ? MAX_FRAME_CAPACITY : maxSteps;
+
+	while (result.frameCount < caps)
+	{
+		b2World_Step(state->worldId, state->worldDef.frameDuration, state->worldDef.subStep);
+
+		// dump frame
+		CarromFrame* frame = &result.frames[result.frameCount];
+		frame->index = result.frameCount;
+
+		CarromGameState_DumpSingleFrame(state, frame);
+
+		result.frameCount++;
+
+		if (!CarromGameState_HasMovement(state))
+		{
+			// disable striker
+			b2Body_Disable(state->strikerBodyId);
+
+			break;
+		}
+	}
+
+	return result;
 }
 
 void CarromGameState_Destroy(CarromGameState* state)
