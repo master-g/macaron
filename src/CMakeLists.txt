@@ -4,7 +4,6 @@ set(MACARON_SOURCE_FILES
         core.h
         defaults.c
         game_state.c
-        puck.c
         toml.c
         toml.h
 )

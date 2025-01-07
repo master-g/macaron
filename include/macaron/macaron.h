@@ -7,16 +7,6 @@
 
 MACARON_API CarromGameDef CarromGameDefLoadFromToml(const char* path);
 
-// Pucks
-
-MACARON_API void CarromPuck_SetPosition(const CarromPuck* puck, b2Vec2 pos);
-
-MACARON_API b2Vec2 CarromPuck_GetPosition(const CarromPuck* puck);
-
-MACARON_API bool CarromPuck_IsEnable(const CarromPuck* puck);
-
-MACARON_API void CarromPuck_SetIsEnable(CarromPuck* puck, bool enable);
-
 // Game state
 
 /**
@@ -37,15 +27,27 @@ MACARON_API CarromGameState CarromGameState_New(const CarromGameDef* def);
 MACARON_API void CarromGameState_Step(const CarromGameState* state);
 
 /**
- * @brief Place puck to the desired position
+ * @brief Get puck position
  *
  * @param state game state
- * @param puck target puck
- * @param step step distance
+ * @param index puck index
  *
- * @return nearest puck data
+ * @return puck position
  */
-MACARON_API b2Vec2 CarromGameState_PlacePuck(const CarromGameState* state, const CarromPuck* puck, float step);
+MACARON_API b2Vec2 CarromGameState_GetPuckPosition(const CarromGameState* state, int index);
+
+/**
+ * @brief Get striker position
+ *
+ * @param state game state
+ *
+ * @return striker position
+ */
+MACARON_API b2Vec2 CarromGameState_GetStrikerPosition(const CarromGameState* state);
+
+MACARON_API b2Vec2 CarromGameState_PlacePuckToPos(const CarromGameState* state, int index, b2Vec2 pos);
+
+MACARON_API void CarromGameState_PlacePuckToPosUnsafe(const CarromGameState* state, int index, b2Vec2 pos);
 
 /**
  * @brief Place pucks to the center of the table

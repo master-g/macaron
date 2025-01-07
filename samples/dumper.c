@@ -49,7 +49,7 @@ void dump_game_state_to_png(const CarromGameState* state, const char* file_path)
 	for (int i = 0; i < state->numOfPucks; i++)
 	{
 		const CarromPuck* puck = &state->pucks[i];
-		const b2Vec2 pos = CarromPuck_GetPosition(&state->pucks[i]);
+		const b2Vec2 pos = CarromGameState_GetPuckPosition(state, i);
 		const int x = (int)(pos.x * scaleX + IMG_WIDTH / 2.f);
 		const int y = (int)(IMG_HEIGHT / 2.f - pos.y * scaleY);
 

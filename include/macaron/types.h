@@ -81,8 +81,6 @@ typedef enum CarromTablePosition
 // Puck position def
 typedef struct CarromPuckPositionDef
 {
-	// object index
-	int32_t index;
 	// color for pucks
 	CarromPuckColor color;
 	// position
@@ -92,8 +90,6 @@ typedef struct CarromPuckPositionDef
 // Pocket position def
 typedef struct CarromPocketPositionDef
 {
-	// pocket index
-	int32_t index;
 	// position
 	b2Vec2 position;
 } CarromPocketPositionDef;
@@ -143,7 +139,7 @@ MACARON_API void CarromGameDef_PlacePockets(CarromGameDef* state);
 // Puck instance
 typedef struct CarromPuck
 {
-	// index, from 1 up to NUM_OF_PUCKS
+	// index, [0, NUM_OF_PUCKS)
 	int32_t index;
 	// color of this puck instance
 	CarromPuckColor color;

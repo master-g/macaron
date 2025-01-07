@@ -60,35 +60,39 @@ CarromStrikerLimitDef CarromDefaultStrikerLimitDef(void)
 void CarromGameDef_PlacePucks(CarromGameDef* def)
 {
 	MACARON_ASSERT(def != NULL);
+	if (def == NULL)
+	{
+		return;
+	}
 
 	const float outR = def->puckPhysicsDef.radius + def->puckPhysicsDef.gap;
 
 	MACARON_ASSERT(outR > 0.0f);
 
 	const CarromPuckPositionDef posDefs[] = {
-		{1, PuckColor_Red, {0.0f, 0.0f}},
+		{PuckColor_Red, {0.0f, 0.0f}},
 
-		{2, PuckColor_White, {-outR * 4, 0.0f}},
-		{3, PuckColor_White, {outR * 2, 0.0f}},
-		{4, PuckColor_White, {outR * 4, 0.0f}},
-		{5, PuckColor_White, {-outR * 2 * 0.5f, outR * 2 * SPI3}},
-		{6, PuckColor_White, {-outR * 4 * 0.5f, outR * 4 * SPI3}},
-		{7, PuckColor_White, {-outR * 2 * 0.5f, -outR * 2 * SPI3}},
-		{8, PuckColor_White, {-outR * 4 * 0.5f, -outR * 4 * SPI3}},
-		{9, PuckColor_White, {outR * 4 * 0.5f, -outR * 4 * SPI3}},
-		{10, PuckColor_White, {outR * 4 * 0.5f, outR * 4 * SPI3}},
+		{PuckColor_White, {-outR * 4, 0.0f}},
+		{PuckColor_White, {outR * 2, 0.0f}},
+		{PuckColor_White, {outR * 4, 0.0f}},
+		{PuckColor_White, {-outR * 2 * 0.5f, outR * 2 * SPI3}},
+		{PuckColor_White, {-outR * 4 * 0.5f, outR * 4 * SPI3}},
+		{PuckColor_White, {-outR * 2 * 0.5f, -outR * 2 * SPI3}},
+		{PuckColor_White, {-outR * 4 * 0.5f, -outR * 4 * SPI3}},
+		{PuckColor_White, {outR * 4 * 0.5f, -outR * 4 * SPI3}},
+		{PuckColor_White, {outR * 4 * 0.5f, outR * 4 * SPI3}},
 
-		{11, PuckColor_Black, {-outR * 2, 0.0f}},
-		{12, PuckColor_Black, {-outR * 3, outR * 2 * SPI3}},
-		{13, PuckColor_Black, {-outR * 3, -outR * 2 * SPI3}},
+		{PuckColor_Black, {-outR * 2, 0.0f}},
+		{PuckColor_Black, {-outR * 3, outR * 2 * SPI3}},
+		{PuckColor_Black, {-outR * 3, -outR * 2 * SPI3}},
 
-		{14, PuckColor_Black, {outR, outR * 2 * SPI3}},
-		{15, PuckColor_Black, {outR * 3, outR * 2 * SPI3}},
-		{16, PuckColor_Black, {outR * 3, -outR * 2 * SPI3}},
-		{17, PuckColor_Black, {outR, -outR * 2 * SPI3}},
+		{PuckColor_Black, {outR, outR * 2 * SPI3}},
+		{PuckColor_Black, {outR * 3, outR * 2 * SPI3}},
+		{PuckColor_Black, {outR * 3, -outR * 2 * SPI3}},
+		{PuckColor_Black, {outR, -outR * 2 * SPI3}},
 
-		{18, PuckColor_Black, {0.0f, outR * 4 * SPI3}},
-		{19, PuckColor_Black, {0.0f, -outR * 4 * SPI3}},
+		{PuckColor_Black, {0.0f, outR * 4 * SPI3}},
+		{PuckColor_Black, {0.0f, -outR * 4 * SPI3}},
 	};
 
 	const int count = sizeof(posDefs) / sizeof(CarromPuckPositionDef);
@@ -101,6 +105,10 @@ void CarromGameDef_PlacePucks(CarromGameDef* def)
 void CarromGameDef_PlacePockets(CarromGameDef* def)
 {
 	MACARON_ASSERT(def != NULL);
+	if (def == NULL)
+	{
+		return;
+	}
 
 	const float r = def->pocketDef.radius;
 
@@ -112,10 +120,10 @@ void CarromGameDef_PlacePockets(CarromGameDef* def)
 	MACARON_ASSERT(w > 0.0f && h > 0.0f);
 
 	const CarromPocketPositionDef posDefs[] = {
-		{1, {-w / 2 + r / 2, h / 2 - r / 2}},
-		{2, {w / 2 - r / 2, h / 2 - r / 2}},
-		{3, {-w / 2 + r / 2, -h / 2 + r / 2}},
-		{4, {w / 2 - r / 2, -h / 2 + r / 2}},
+		{{-w / 2 + r / 2, h / 2 - r / 2}},
+		{{w / 2 - r / 2, h / 2 - r / 2}},
+		{{-w / 2 + r / 2, -h / 2 + r / 2}},
+		{{w / 2 - r / 2, -h / 2 + r / 2}},
 	};
 
 	const int count = sizeof(posDefs) / sizeof(CarromPocketPositionDef);

@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 #include "macaron/macaron.h"
 
@@ -35,7 +34,7 @@ void sample_place_puck_to_center()
 
 void sample_place_striker()
 {
-	CarromGameState state = new_game_state();
+	const CarromGameState state = new_game_state();
 	for (int i = 0; i < 10; i++)
 	{
 		const CarromPuck* puck = &state.pucks[i];
@@ -45,8 +44,7 @@ void sample_place_striker()
 		const float dist = state.strikerPhysicsDef.radius * 2.f + state.puckPhysicsDef.radius;
 		pos.x = sign * dist * (float)i / 2;
 
-		CarromPuck_SetPosition(puck, pos);
-		CarromGameState_PlacePuck(&state, puck, 0.001f);
+		CarromGameState_PlacePuckToPosUnsafe(&state, puck->index, pos);
 	}
 
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, 0.0f);
