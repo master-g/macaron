@@ -118,7 +118,7 @@ void sample_take_snapshot()
 	dump_game_state_to_png(&state, "sample_take_snapshot_0.png");
 
 	// take snapshot
-	CarromStateSnapshot snapshot = CarromGameState_TakeSnapshot(&state);
+	CarromSnapshot snapshot = CarromGameState_TakeSnapshot(&state);
 
 	// apply on old state
 	CarromGameState_ApplySnapshot(&state, &snapshot, true);
@@ -177,13 +177,11 @@ b2Vec2 find_pocket_impulse()
 
 void sample_eval()
 {
-	// b2Vec2 impulse = find_pocket_impulse();
-	// printf("impulse found: (%.3f, %.3f)\n", impulse.x, impulse.y);
-
 	const b2Vec2 impulse = {-28.621f, -148.244f};
 
 	// new state
 	const CarromGameState state = new_game_state();
+	CarromEvalResultViewer viewer = CarromEvalResultViewerCreate(&state);
 
 	// strike!
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, 0.0f);
@@ -196,24 +194,54 @@ void sample_eval()
 	for (int i = 0; i < result.frameCount; i++)
 	{
 		const CarromFrame* frame = &result.frames[i];
-		for (int j = 0; j < frame->movementCount; j++)
-		{
-			const CarromObjectMovement* movement = &frame->movements[j];
-			if (movement->hitPocket)
-			{
-				printf("frame: %d, movement: %d, hit pocket\n", i, j);
-			}
-		}
+		CarromEvalResultViewer_Update(&viewer, frame);
+	}
+}
+
+void sample_eval_with_picture_output()
+{
+	// b2Vec2 impulse = find_pocket_impulse();
+	// printf("impulse found: (%.3f, %.3f)\n", impulse.x, impulse.y);
+
+	system("rm -r output");
+	system("mkdir -p output");
+
+	const b2Vec2 impulse = {-28.621f, -148.244f};
+
+	// new state
+	const CarromGameState state = new_game_state();
+	CarromEvalResultViewer viewer = CarromEvalResultViewerCreate(&state);
+
+	// strike!
+	CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, 0.0f);
+	CarromGameState_Strike(&state, impulse);
+
+	// eval
+	const CarromEvalResult result = CarromGameState_Eval(&state, 0);
+	printf("frame count: %d\n", result.frameCount);
+
+	// dump
+	dump_viewer_to_png(&viewer, "output/viewer_000.png");
+
+	for (int i = 0; i < result.frameCount; i++)
+	{
+		const CarromFrame* frame = &result.frames[i];
+		CarromEvalResultViewer_Update(&viewer, frame);
+
+		char buf[256];
+		snprintf(buf, sizeof(buf), "output/viewer_%03d.png", i+1);
+		dump_viewer_to_png(&viewer, buf);
 	}
 
-	dump_game_state_to_png(&state, "sample_eval.png");
+	system("magick -delay 2 -loop 0 output/*.png output.gif");
 }
 
 int main(int argc, char** argv)
 {
 	// sample_take_snapshot();
 	// sample_userdata();
-	sample_eval();
+	// sample_eval();
+	sample_eval_with_picture_output();
 
 	return 0;
 }

@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include <macaron/types.h>
 #include <macaron/macaron.h>
 
@@ -523,7 +521,7 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 				newPos.x = left;
 				if (reversed)
 				{
-					printf("CarromGameState_PlaceStriker reversed\n");
+					// printf("CarromGameState_PlaceStriker reversed\n");
 					return pos;
 				}
 				direction = -direction;
@@ -534,7 +532,7 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 				newPos.x = right;
 				if (reversed)
 				{
-					printf("CarromGameState_PlaceStriker reversed\n");
+					// printf("CarromGameState_PlaceStriker reversed\n");
 					return pos;
 				}
 				direction = -direction;
@@ -589,12 +587,12 @@ void CarromGameState_Strike(const CarromGameState* state, b2Vec2 impulse)
 	b2Body_ApplyForceToCenter(state->strikerBodyId, impulse, true);
 }
 
-CarromStateSnapshot CarromGameState_TakeSnapshot(const CarromGameState* state)
+CarromSnapshot CarromGameState_TakeSnapshot(const CarromGameState* state)
 {
 	MACARON_ASSERT(state != NULL);
 	MACARON_ASSERT(b2World_IsValid(state->worldId));
 
-	CarromStateSnapshot snapshot = {0};
+	CarromSnapshot snapshot = {0};
 	for (int i = 0; i < state->numOfPucks; i++)
 	{
 		const CarromPuck* puck = &state->pucks[i];
@@ -609,7 +607,7 @@ CarromStateSnapshot CarromGameState_TakeSnapshot(const CarromGameState* state)
 	return snapshot;
 }
 
-void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromStateSnapshot* snapshot, const bool recreate)
+void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromSnapshot* snapshot, const bool recreate)
 {
 	MACARON_ASSERT(state != NULL);
 	MACARON_ASSERT(snapshot != NULL);
@@ -654,6 +652,8 @@ void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromStateSnap
 	}
 }
 
+#include <stdio.h>
+
 /**
  * NOTE: WE ASSUME THAT THERE ARE ONLY TWO TYPES OF MOVING OBJECTS:
  * 1. STRIKER
@@ -677,6 +677,14 @@ void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* 
 		for (int i = 0; i < sensorEvents.beginCount; i++)
 		{
 			const b2SensorBeginTouchEvent* sensorEvent = &sensorEvents.beginEvents[i];
+			const b2ShapeId sensorShapeId = sensorEvent->sensorShapeId;
+			const b2BodyId sensorBodyId = b2Shape_GetBody(sensorShapeId);
+
+			if (!B2_ID_EQUALS(sensorBodyId, state->wallBodyId))
+			{
+				continue;
+			}
+
 			const b2ShapeId visitorId = sensorEvent->visitorShapeId;
 			const b2BodyId bodyId = b2Shape_GetBody(visitorId);
 
@@ -756,7 +764,6 @@ void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* 
 		{
 			const b2BodyMoveEvent* bodyMoveEvent = &bodyEvents.moveEvents[i];
 			CarromObjectMovement* movement = &output->movements[output->movementCount];
-			movement->index = output->movementCount;
 			movement->position = bodyMoveEvent->transform.p;
 
 			if (B2_ID_EQUALS(bodyMoveEvent->bodyId, state->strikerBodyId))
@@ -771,6 +778,7 @@ void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* 
 				// puck moves
 				const int32_t puckIndex = (int32_t)(intptr_t)b2Body_GetUserData(bodyMoveEvent->bodyId);
 				movement->type = CarromObjectType_Puck;
+				movement->index = puckIndex;
 				movement->hitPocket = pucksHitPocket[puckIndex];
 				movement->hitObject = pucksHitOtherObject[puckIndex];
 			}

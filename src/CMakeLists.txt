@@ -6,12 +6,14 @@ set(MACARON_SOURCE_FILES
         game_state.c
         toml.c
         toml.h
+        viewer.c
 )
 
 set(MACARON_API_FILES
         ../include/macaron/base.h
         ../include/macaron/macaron.h
         ../include/macaron/types.h
+        ../include/macaron/viewer.h
 )
 
 # Hide internal functions

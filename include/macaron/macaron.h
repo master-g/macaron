@@ -2,6 +2,7 @@
 
 #include "base.h"
 #include "types.h"
+#include "viewer.h"
 
 // Game def
 
@@ -154,7 +155,7 @@ MACARON_API void CarromGameState_Strike(const CarromGameState* state, b2Vec2 imp
  *
  * @return snapshot of the game state
  */
-MACARON_API CarromStateSnapshot CarromGameState_TakeSnapshot(const CarromGameState* state);
+MACARON_API CarromSnapshot CarromGameState_TakeSnapshot(const CarromGameState* state);
 
 /**
  * @brief Apply snapshot to the game state
@@ -163,7 +164,7 @@ MACARON_API CarromStateSnapshot CarromGameState_TakeSnapshot(const CarromGameSta
  * @param snapshot snapshot of the game state
  * @param recreate recreate the game state
  */
-MACARON_API void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromStateSnapshot* snapshot, bool recreate);
+MACARON_API void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromSnapshot* snapshot, bool recreate);
 
 /**
  * @brief Let the game state steps until no more movements

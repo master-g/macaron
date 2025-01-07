@@ -66,6 +66,8 @@ typedef enum CarromObjectType
 	CarromObjectType_Striker,
 	CarromObjectType_Pocket,
 
+	CarromObjectType_Count,
+
 } CarromObjectType;
 
 // Puck color
@@ -217,7 +219,7 @@ typedef struct CarromStateSnapshot
 	// enabled pucks
 	CarromPuckSnapshot enabledPucks[MAX_PUCK_CAPACITY];
 
-} CarromStateSnapshot;
+} CarromSnapshot;
 
 // Carrom object movement
 typedef struct CarromObjectMovement
