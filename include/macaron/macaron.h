@@ -17,8 +17,6 @@ MACARON_API bool CarromPuck_IsEnable(const CarromPuck* puck);
 
 MACARON_API void CarromPuck_SetIsEnable(CarromPuck* puck, bool enable);
 
-MACARON_API void CarromPuck_Reset(CarromPuck* puck);
-
 // Game state
 
 /**
@@ -90,10 +88,27 @@ MACARON_API bool CarromGameState_IsStrikerOverlapping(const CarromGameState* sta
  * @brief Apply force to the strike
  *
  * @param state game state
- * @param tablePos position on the table
  * @param impulse force and direction
  */
-MACARON_API void CarromGameState_Strike(const CarromGameState* state, CarromTablePosition tablePos, b2Vec2 impulse);
+MACARON_API void CarromGameState_Strike(const CarromGameState* state, b2Vec2 impulse);
+
+/**
+ * @brief Take snapshot of the game state
+ *
+ * @param state game state
+ *
+ * @return snapshot of the game state
+ */
+MACARON_API CarromStateSnapshot CarromGameState_TakeSnapshot(const CarromGameState* state);
+
+/**
+ * @brief Apply snapshot to the game state
+ *
+ * @param state game state
+ * @param snapshot snapshot of the game state
+ * @param recreate recreate the game state
+ */
+MACARON_API void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromStateSnapshot* snapshot, bool recreate);
 
 /**
  * @brief Destroy game state and free memory

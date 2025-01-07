@@ -185,7 +185,7 @@ CarromGameDef CarromGameDefLoadFromToml(const char* path)
 		error("missing [striker]", "");
 	}
 
-	CarromPuckPhysicsDef strikerPhysicsDef = CarromPuckPhysicsDefFromTomlTable(puckPhysicsTable);
+	CarromPuckPhysicsDef strikerPhysicsDef = CarromPuckPhysicsDefFromTomlTable(strikerPhysicsTable);
 
 	CarromGameDef def = CarromDefaultGameDef();
 	def.worldDef = worldDef;

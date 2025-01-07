@@ -25,10 +25,3 @@ void CarromPuck_SetIsEnable(CarromPuck* puck, bool enable)
 	MACARON_ASSERT(puck != NULL);
 	enable ? b2Body_Enable(puck->bodyId) : b2Body_Disable(puck->bodyId);
 }
-
-void CarromPuck_Reset(CarromPuck* puck)
-{
-	MACARON_ASSERT(puck != NULL);
-	CarromPuck_SetPosition(puck, puck->originPos);
-	CarromPuck_SetIsEnable(puck, true);
-}

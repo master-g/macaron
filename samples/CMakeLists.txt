@@ -1,6 +1,8 @@
 add_executable(samples
-        olive.c
-        stb_image_write.h
+        extern/olive.c
+        extern/stb_image_write.h
+        dumper.c
+        dumper.h
         main.c
 )
 

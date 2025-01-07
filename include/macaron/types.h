@@ -147,8 +147,6 @@ typedef struct CarromPuck
 	int32_t index;
 	// color of this puck instance
 	CarromPuckColor color;
-	// original position
-	b2Vec2 originPos;
 	// body id in Box2D
 	b2BodyId bodyId;
 } CarromPuck;
@@ -183,6 +181,9 @@ typedef struct CarromGameState
 	// number of pockets
 	int32_t numOfPockets;
 
+	// pocket position definitions
+	CarromPocketPositionDef pocketsPositionDefs[MAX_POCKET_CAPACITY];
+
 	// pockets
 	b2ShapeId pockets[MAX_POCKET_CAPACITY];
 
@@ -192,7 +193,27 @@ typedef struct CarromGameState
 	// pucks
 	CarromPuck pucks[MAX_PUCK_CAPACITY];
 
+	// puck position definitions
+	CarromPuckPositionDef pucksPositionDefs[MAX_PUCK_CAPACITY];
+
 	// striker
 	b2BodyId strikerBodyId;
 
 } CarromGameState;
+
+typedef struct CarromPuckSnapshot
+{
+	// object index
+	int32_t index;
+	// position
+	b2Vec2 position;
+} CarromPuckSnapshot;
+
+// Game object position
+typedef struct CarromStateSnapshot
+{
+	// number of enabled pucks
+	int numOfEnabledPucks;
+	// enabled pucks
+	CarromPuckSnapshot enabledPucks[MAX_PUCK_CAPACITY];
+} CarromStateSnapshot;
