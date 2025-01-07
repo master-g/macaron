@@ -45,8 +45,33 @@ MACARON_API b2Vec2 CarromGameState_GetPuckPosition(const CarromGameState* state,
  */
 MACARON_API b2Vec2 CarromGameState_GetStrikerPosition(const CarromGameState* state);
 
+/**
+ * @brief Place puck to the desired position
+ *
+ * this function will move the puck to the desired position first,
+ *
+ * and then perform collision detection to make sure the puck is not overlapping with other pucks
+ *
+ * so the final position of the puck might be different from the desired position
+ *
+ * @param state game state
+ * @param index puck index
+ * @param pos desired position
+ *
+ * @return final position of the puck
+ */
 MACARON_API b2Vec2 CarromGameState_PlacePuckToPos(const CarromGameState* state, int index, b2Vec2 pos);
 
+/**
+ * @brief Place puck to the desired position
+ *
+ * this function will just simply move the puck to the desired position, without any collision detection
+ *
+ * @param state game state
+ * @param index puck index
+ * @param pos desired position
+ *
+ */
 MACARON_API void CarromGameState_PlacePuckToPosUnsafe(const CarromGameState* state, int index, b2Vec2 pos);
 
 /**
