@@ -2,7 +2,6 @@
 #include <macaron/macaron.h>
 
 #include "core.h"
-#include "../extern/box2d/src/body.h"
 
 CarromPuck CarromPuck_New(const b2WorldId worldId, const CarromPuckPhysicsDef* physicsDef)
 {
