@@ -187,6 +187,8 @@ CarromGameDef CarromGameDefLoadFromToml(const char* path)
 
 	CarromPuckPhysicsDef strikerPhysicsDef = CarromPuckPhysicsDefFromTomlTable(strikerPhysicsTable);
 
+	toml_free(conf);
+
 	CarromGameDef def = CarromDefaultGameDef();
 	def.worldDef = worldDef;
 	def.puckPhysicsDef = puckPhysicsDef;

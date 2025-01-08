@@ -2,6 +2,7 @@
 
 #include <macaron/types.h>
 
+// sine value of 60 degrees
 #define SPI3 0.8660254037844386f
 
 CarromWorldDef CarromDefaultWorldDef(void)
@@ -72,6 +73,16 @@ void CarromGameDef_PlacePucks(CarromGameDef* def)
 	const CarromPuckPositionDef posDefs[] = {
 		{CarromPuckColor_Red, {0.0f, 0.0f}},
 
+		{CarromPuckColor_Black, {-outR * 2, 0.0f}},
+		{CarromPuckColor_Black, {-outR * 3, outR * 2 * SPI3}},
+		{CarromPuckColor_Black, {-outR * 3, -outR * 2 * SPI3}},
+		{CarromPuckColor_Black, {outR, outR * 2 * SPI3}},
+		{CarromPuckColor_Black, {outR * 3, outR * 2 * SPI3}},
+		{CarromPuckColor_Black, {outR * 3, -outR * 2 * SPI3}},
+		{CarromPuckColor_Black, {outR, -outR * 2 * SPI3}},
+		{CarromPuckColor_Black, {0.0f, outR * 4 * SPI3}},
+		{CarromPuckColor_Black, {0.0f, -outR * 4 * SPI3}},
+
 		{CarromPuckColor_White, {-outR * 4, 0.0f}},
 		{CarromPuckColor_White, {outR * 2, 0.0f}},
 		{CarromPuckColor_White, {outR * 4, 0.0f}},
@@ -81,18 +92,6 @@ void CarromGameDef_PlacePucks(CarromGameDef* def)
 		{CarromPuckColor_White, {-outR * 4 * 0.5f, -outR * 4 * SPI3}},
 		{CarromPuckColor_White, {outR * 4 * 0.5f, -outR * 4 * SPI3}},
 		{CarromPuckColor_White, {outR * 4 * 0.5f, outR * 4 * SPI3}},
-
-		{CarromPuckColor_Black, {-outR * 2, 0.0f}},
-		{CarromPuckColor_Black, {-outR * 3, outR * 2 * SPI3}},
-		{CarromPuckColor_Black, {-outR * 3, -outR * 2 * SPI3}},
-
-		{CarromPuckColor_Black, {outR, outR * 2 * SPI3}},
-		{CarromPuckColor_Black, {outR * 3, outR * 2 * SPI3}},
-		{CarromPuckColor_Black, {outR * 3, -outR * 2 * SPI3}},
-		{CarromPuckColor_Black, {outR, -outR * 2 * SPI3}},
-
-		{CarromPuckColor_Black, {0.0f, outR * 4 * SPI3}},
-		{CarromPuckColor_Black, {0.0f, -outR * 4 * SPI3}},
 	};
 
 	const int count = sizeof(posDefs) / sizeof(CarromPuckPositionDef);
