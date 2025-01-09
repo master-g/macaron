@@ -11,17 +11,20 @@ CarromEvalResultViewer CarromEvalResultViewerCreate(const CarromGameState* state
 		return viewer;
 	}
 
-	viewer.strikerEnabled = true;
-	viewer.strikerPosition = b2Body_GetPosition(state->strikerBodyId);
-
-	for (int i = 0; i < state->numOfPucks; i++)
+	for (int i = 0; i < NUM_OF_OBJECTS; i++)
 	{
-		const CarromPuck* puck = &state->pucks[i];
-		viewer.puckEnable[i] = b2Body_IsEnabled(puck->bodyId);
-		viewer.puckPosition[i] = b2Body_GetPosition(puck->bodyId);
-		viewer.puckColor[i] = puck->color;
+		const CarromObject* obj = &state->objects[i];
+		if (B2_ID_EQUALS(obj->bodyId, b2_nullBodyId))
+		{
+			viewer.enables[i] = false;
+			viewer.positions[i] = b2Vec2_zero;
+		}
+		else
+		{
+			viewer.enables[i] = b2Body_IsEnabled(obj->bodyId);
+			viewer.positions[i] = b2Body_GetPosition(obj->bodyId);
+		}
 	}
-	viewer.numOfPucks = state->numOfPucks;
 
 	for (int i = 0; i < state->numOfPockets; i++)
 	{
@@ -50,24 +53,13 @@ void CarromEvalResultViewer_Update(CarromEvalResultViewer* viewer, const CarromF
 		return;
 	}
 
-	for (int i = 0; i < frame->movementCount; i++)
+	for (int i = 0; i < NUM_OF_OBJECTS; i++)
 	{
-		const CarromObjectMovement* movement = &frame->movements[i];
-		if (movement->type == CarromObjectType_Striker)
+		const CarromObjectSnapshot* snapshot = &frame->snapshots[i];
+		if (MACARON_IS_VALID_OBJ_IDX(snapshot->index))
 		{
-			viewer->strikerPosition = movement->position;
-			if (movement->hitPocket)
-			{
-				viewer->strikerEnabled = false;
-			}
-		}
-		else if (movement->type == CarromObjectType_Puck)
-		{
-			viewer->puckPosition[movement->index] = movement->position;
-			if (movement->hitPocket)
-			{
-				viewer->puckEnable[movement->index] = false;
-			}
+			viewer->enables[snapshot->index] = snapshot->enable;
+			viewer->positions[snapshot->index] = snapshot->position;
 		}
 	}
 }

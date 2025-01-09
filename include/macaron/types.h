@@ -2,9 +2,31 @@
 
 #include "base.h"
 
-#define MAX_PUCK_CAPACITY 19
+// 0: striker, 1-9: black pucks, 11-19: white pucks, 21: red puck
+#define NUM_OF_OBJECTS 22
 #define MAX_POCKET_CAPACITY 4
 #define MAX_FRAME_CAPACITY 512
+
+#define IDX_WALL (-1)
+
+#define IDX_STRIKER 0
+#define IDX_PUCK_BLACK_START 1
+#define IDX_PUCK_BLACK_END 10
+#define IDX_PUCK_WHITE_START 11
+#define IDX_PUCK_WHITE_END 20
+#define IDX_PUCK_RED 21
+
+#define PUCK_IDX_COUNT 19
+
+extern const int32_t sPuckIndexes[PUCK_IDX_COUNT];
+
+#define MACARON_IS_VALID_PUCK_IDX(i) \
+	((i) >= IDX_PUCK_BLACK_START && (i) < IDX_PUCK_BLACK_END || \
+	 (i) >= IDX_PUCK_WHITE_START && (i) < IDX_PUCK_WHITE_END || \
+	 (i) == IDX_PUCK_RED)
+
+#define MACARON_IS_VALID_OBJ_IDX(i) \
+	((i) == IDX_STRIKER || MACARON_IS_VALID_PUCK_IDX(i))
 
 // Box2D world def
 typedef struct CarromWorldDef
@@ -70,6 +92,12 @@ typedef enum CarromObjectType
 
 } CarromObjectType;
 
+#define MACARON_IDX_OBJECT_TYPE(idx) \
+	((idx) == IDX_STRIKER ? CarromObjectType_Striker : \
+	 (idx) >= IDX_PUCK_BLACK_START && (idx) < IDX_PUCK_BLACK_END ? CarromObjectType_Puck : \
+	 (idx) >= IDX_PUCK_WHITE_START && (idx) < IDX_PUCK_WHITE_END ? CarromObjectType_Puck : \
+	 (idx) == IDX_PUCK_RED ? CarromObjectType_Puck : CarromObjectType_Pocket)
+
 // Puck color
 typedef enum CarromPuckColor
 {
@@ -78,6 +106,11 @@ typedef enum CarromPuckColor
 	CarromPuckColor_Red,
 
 } CarromPuckColor;
+
+#define MACARON_IDX_PUCK_COLOR(idx) \
+	((idx) >= IDX_PUCK_BLACK_START && (idx) < IDX_PUCK_BLACK_END ? CarromPuckColor_Black : \
+	 (idx) >= IDX_PUCK_WHITE_START && (idx) < IDX_PUCK_WHITE_END ? CarromPuckColor_White : \
+	 (idx) == IDX_PUCK_RED ? CarromPuckColor_Red : CarromPuckColor_White)
 
 // Player position
 typedef enum CarromTablePosition
@@ -89,22 +122,15 @@ typedef enum CarromTablePosition
 
 } CarromTablePosition;
 
-// Puck position def
-typedef struct CarromPuckPositionDef
+// object position def
+typedef struct CarromObjectPositionDef
 {
-	// color for pucks
-	CarromPuckColor color;
+	// object index, use for pucks
+	int32_t index;
 	// position
 	b2Vec2 position;
 
-} CarromPuckPositionDef;
-
-// Pocket position def
-typedef struct CarromPocketPositionDef
-{
-	// position
-	b2Vec2 position;
-} CarromPocketPositionDef;
+} CarromObjectPositionDef;
 
 // Striker limitation def
 typedef struct CarromStrikerLimitDef
@@ -135,30 +161,28 @@ typedef struct CarromGameDef
 	// pocket count
 	int32_t numOfPockets;
 	// pocket positions
-	CarromPocketPositionDef pocketsPositions[MAX_POCKET_CAPACITY];
+	CarromObjectPositionDef pocketsPositions[MAX_POCKET_CAPACITY];
 	// pucks count
 	int32_t numOfPucks;
 	// pucks positions
-	CarromPuckPositionDef pucksPositions[MAX_PUCK_CAPACITY];
+	CarromObjectPositionDef pucksPositions[NUM_OF_OBJECTS];
 } CarromGameDef;
 
 MACARON_API CarromGameDef CarromDefaultGameDef(void);
 
 MACARON_API void CarromGameDef_PlacePucks(CarromGameDef* def);
 
-MACARON_API void CarromGameDef_PlacePockets(CarromGameDef* state);
+MACARON_API void CarromGameDef_PlacePockets(CarromGameDef* def);
 
-// Puck instance
-typedef struct CarromPuck
+// Object instance
+typedef struct CarromObject
 {
-	// index, [0, NUM_OF_PUCKS)
+	// index
 	int32_t index;
-	// color of this puck instance
-	CarromPuckColor color;
 	// body id in Box2D
 	b2BodyId bodyId;
 
-} CarromPuck;
+} CarromObject;
 
 // Game instance
 typedef struct CarromGameState
@@ -184,78 +208,72 @@ typedef struct CarromGameState
 	int32_t numOfPockets;
 
 	// pocket position definitions
-	CarromPocketPositionDef pocketsPositionDefs[MAX_POCKET_CAPACITY];
+	CarromObjectPositionDef pocketsPositionDefs[MAX_POCKET_CAPACITY];
 
 	// pockets
 	b2ShapeId pockets[MAX_POCKET_CAPACITY];
 
-	// number of pucks
-	int32_t numOfPucks;
+	// number of object position definitions
+	int32_t numOfPosDefs;
 
-	// pucks
-	CarromPuck pucks[MAX_PUCK_CAPACITY];
+	// object position definitions
+	CarromObjectPositionDef objectPositionDefs[NUM_OF_OBJECTS];
 
-	// puck position definitions
-	CarromPuckPositionDef pucksPositionDefs[MAX_PUCK_CAPACITY];
-
-	// striker
-	b2BodyId strikerBodyId;
+	// objects
+	CarromObject objects[NUM_OF_OBJECTS];
 
 } CarromGameState;
 
-// Puck object snapshot
-typedef struct CarromPuckSnapshot
+typedef enum CarromHitEventType
 {
-	// object index
-	int32_t index;
-	// position
-	b2Vec2 position;
+	CarromHitEventType_None,
+	CarromHitEventType_HitWall,
+	CarromHitEventType_HitPuck,
+	CarromHitEventType_HitPocket,
 
-} CarromPuckSnapshot;
+} CarromHitEventType;
 
-// Game state snapshot, object position
-typedef struct CarromStateSnapshot
+// Carrom object snapshot
+typedef struct CarromObjectSnapshot
 {
-	// number of enabled pucks
-	int numOfEnabledPucks;
-	// enabled pucks
-	CarromPuckSnapshot enabledPucks[MAX_PUCK_CAPACITY];
-
-} CarromSnapshot;
-
-// Carrom object movement
-typedef struct CarromObjectMovement
-{
-	// object type
-	CarromObjectType type;
 	// object index
 	int32_t index;
 	// object position
 	b2Vec2 position;
-	// hit pocket
+	// enable, object will be disabled if it hits the pocket
+	bool enable;
+	// hit event
+	CarromHitEventType hitEvent;
+	// just hit pocket
 	bool hitPocket;
-	// hit other object
-	bool hitObject;
+	// hit pocket index
+	int32_t hitPocketIndex;
 
-} CarromObjectMovement;
+} CarromObjectSnapshot;
 
 // Single frame of the carrom game
 typedef struct CarromFrame
 {
 	// frame index
 	int32_t index;
-	// number of moving objects
-	int32_t movementCount;
-	// moving objects
-	CarromObjectMovement movements[MAX_PUCK_CAPACITY + 1];
+	// striker hits the pocket
+	bool strikerHitPocket;
+	// number of pucks hit the pocket
+	int32_t pucksHitPocket;
+	// object snapshots
+	CarromObjectSnapshot snapshots[NUM_OF_OBJECTS];
 
 } CarromFrame;
 
 // Frames
 typedef struct CarromEvalResult
 {
+	// striker hit the pocket
+	bool strikerHitPocket;
+	// number of pucks hit the pocket
+	int32_t pucksHitPocket;
 	// number of frames
-	int32_t frameCount;
+	int32_t numFrames;
 	// frames
 	CarromFrame frames[MAX_FRAME_CAPACITY];
 

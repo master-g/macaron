@@ -4,12 +4,8 @@
 
 typedef struct CarromEvalResultViewer
 {
-	bool strikerEnabled;
-	b2Vec2 strikerPosition;
-	bool puckEnable[MAX_PUCK_CAPACITY];
-	int numOfPucks;
-	b2Vec2 puckPosition[MAX_PUCK_CAPACITY];
-	CarromPuckColor puckColor[MAX_PUCK_CAPACITY];
+	bool enables[NUM_OF_OBJECTS];
+	b2Vec2 positions[NUM_OF_OBJECTS];
 
 	float radius[CarromObjectType_Count];
 

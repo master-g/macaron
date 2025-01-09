@@ -7,10 +7,10 @@
 
 CarromGameDef load_game_def()
 {
-    return CarromGameDefLoadFromToml("samples/config/carrom_config_example.toml");
+	return CarromGameDefLoadFromToml("samples/config/carrom_config_example.toml");
 }
 
-CarromGameState new_game_state(const CarromGameDef *gameDef)
+CarromGameState new_game_state(const CarromGameDef* gameDef)
 {
 	// for (int i = 0; i < gameDef.numOfPucks; i++)
 	// {
@@ -53,8 +53,7 @@ void sample_place_striker()
 	}
 
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, b2Vec2_zero);
-
-	b2Body_Enable(state.strikerBodyId);
+	CarromGameState_EnableStriker(&state);
 	dump_game_state_to_png(&state, "sample_place_striker_top.png");
 
 	for (int i = 0; i < 10; i++)
@@ -124,7 +123,7 @@ void sample_strike()
 		const b2BodyEvents events = b2World_GetBodyEvents(state.worldId);
 		if (events.moveCount == 0)
 		{
-			b2Body_Disable(state.strikerBodyId);
+			CarromGameState_DisableStriker(&state);
 			printf("no more moves, break early, steps: %d\n", i);
 
 			// dump last frame
@@ -156,7 +155,7 @@ void sample_take_snapshot()
 		const b2BodyEvents events = b2World_GetBodyEvents(state.worldId);
 		if (events.moveCount == 0)
 		{
-			b2Body_Disable(state.strikerBodyId);
+			CarromGameState_DisableStriker(&state);
 			printf("no more moves, break early, steps: %d\n", i);
 
 			break;
@@ -167,7 +166,7 @@ void sample_take_snapshot()
 	dump_game_state_to_png(&state, "sample_take_snapshot_0.png");
 
 	// take snapshot
-	CarromSnapshot snapshot = CarromGameState_TakeSnapshot(&state);
+	CarromFrame snapshot = CarromGameState_TakeSnapshot(&state);
 
 	// apply on old state
 	CarromGameState_ApplySnapshot(&state, &snapshot, true);
@@ -226,18 +225,9 @@ b2Vec2 find_pocket_impulse(CarromTablePosition tablePos)
 
 		// eval
 		const CarromEvalResult result = CarromGameState_Eval(&state, 0);
-
-		for (int i = 0; i < result.frameCount; i++)
+		if (!result.strikerHitPocket && result.pucksHitPocket > 0)
 		{
-			const CarromFrame* frame = &result.frames[i];
-			for (int j = 0; j < frame->movementCount; j++)
-			{
-				const CarromObjectMovement* movement = &frame->movements[j];
-				if (movement->hitPocket && movement->type == CarromObjectType_Puck)
-				{
-					return impulse;
-				}
-			}
+			return impulse;
 		}
 	}
 }
@@ -257,9 +247,9 @@ void sample_eval()
 
 	// eval
 	const CarromEvalResult result = CarromGameState_Eval(&state, 0);
-	printf("frame count: %d\n", result.frameCount);
+	printf("frame count: %d\n", result.numFrames);
 
-	for (int i = 0; i < result.frameCount; i++)
+	for (int i = 0; i < result.numFrames; i++)
 	{
 		const CarromFrame* frame = &result.frames[i];
 		CarromEvalResultViewer_Update(&viewer, frame);
@@ -290,12 +280,17 @@ b2Vec2 sample_eval_any(const CarromTablePosition tablePos)
 
 	// eval
 	const CarromEvalResult result = CarromGameState_Eval(&state, 0);
-	printf("frame count: %d\n", result.frameCount);
+	printf("frame count: %d\n", result.numFrames);
 
-	for (int i = 0; i < result.frameCount; i++)
+	for (int i = 0; i < result.numFrames; i++)
 	{
 		const CarromFrame* frame = &result.frames[i];
 		CarromEvalResultViewer_Update(&viewer, frame);
+
+		if (viewer.enables[0] == false)
+		{
+			printf("puck 0 is disabled\n");
+		}
 
 		char buf[256];
 		snprintf(buf, sizeof(buf), "output/viewer_%03d.png", i+1);
@@ -318,20 +313,21 @@ void sample_eval_with_picture_output()
 	// new state
 	const CarromGameDef def = load_game_def();
 	const CarromGameState state = new_game_state(&def);
-	CarromEvalResultViewer viewer = CarromEvalResultViewerCreate(&state);
 
 	// strike!
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, b2Vec2_zero);
 	CarromGameState_Strike(&state, impulse);
 
+	CarromEvalResultViewer viewer = CarromEvalResultViewerCreate(&state);
+
 	// eval
 	const CarromEvalResult result = CarromGameState_Eval(&state, 0);
-	printf("frame count: %d\n", result.frameCount);
+	printf("frame count: %d\n", result.numFrames);
 
 	// dump
 	dump_viewer_to_png(&viewer, "output/viewer_000.png");
 
-	for (int i = 0; i < result.frameCount; i++)
+	for (int i = 0; i < result.numFrames; i++)
 	{
 		const CarromFrame* frame = &result.frames[i];
 		CarromEvalResultViewer_Update(&viewer, frame);

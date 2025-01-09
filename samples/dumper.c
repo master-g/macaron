@@ -8,7 +8,6 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "extern/stb_image_write.h"
 
-
 static uint32_t pixels[IMG_WIDTH * IMG_HEIGHT];
 
 void draw_limiter(const Olivec_Canvas* oc, const float width, const float offCenter, const float scaleX, const float scaleY)
@@ -59,10 +58,11 @@ void dump_game_state_to_png(const CarromGameState* state, const char* file_path)
 		0xFF101013, // black
 		0xFF5B2CF7, // red
 	};
-	for (int i = 0; i < state->numOfPucks; i++)
+	for (int i = 0; i < PUCK_IDX_COUNT; i++)
 	{
-		const b2Vec2 pos = CarromGameState_GetPuckPosition(state, i);
-		const CarromPuckColor color = CarromGameState_GetPuckColor(state, i);
+		const int idx = sPuckIndexes[i];
+		const b2Vec2 pos = CarromGameState_GetPuckPosition(state, idx);
+		const CarromPuckColor color = MACARON_IDX_PUCK_COLOR(idx);
 		const int x = (int)(pos.x * scaleX + IMG_WIDTH / 2.f);
 		const int y = (int)(IMG_HEIGHT / 2.f - pos.y * scaleY);
 
@@ -70,9 +70,10 @@ void dump_game_state_to_png(const CarromGameState* state, const char* file_path)
 	}
 
 	// striker
-	if (b2Body_IsEnabled(state->strikerBodyId))
+	if (CarromGameState_IsStrikerEnabled(state))
 	{
-		const b2Vec2 pos = b2Body_GetPosition(state->strikerBodyId);
+		const b2Vec2 pos =
+			CarromGameState_GetStrikerPosition(state);
 		const int x = (int)(pos.x * scaleX + IMG_WIDTH / 2.f);
 		const int y = (int)(IMG_HEIGHT / 2.f - pos.y * scaleY);
 		const int r = (int)(state->strikerPhysicsDef.radius * scaleX);
@@ -116,14 +117,15 @@ void dump_viewer_to_png(const CarromEvalResultViewer* viewer, const char* file_p
 		0xFF101013, // black
 		0xFF5B2CF7, // red
 	};
-	for (int i = 0; i < viewer->numOfPucks; i++)
+	for (int i = 0; i < PUCK_IDX_COUNT; i++)
 	{
-		if (!viewer->puckEnable[i])
+		const int idx = sPuckIndexes[i];
+		if (!viewer->enables[idx])
 		{
 			continue;
 		}
-		const b2Vec2 pos = viewer->puckPosition[i];
-		const CarromPuckColor color = viewer->puckColor[i];
+		const b2Vec2 pos = viewer->positions[idx];
+		const CarromPuckColor color = MACARON_IDX_PUCK_COLOR(idx);
 		const int x = (int)(pos.x * scaleX + IMG_WIDTH / 2.f);
 		const int y = (int)(IMG_HEIGHT / 2.f - pos.y * scaleY);
 
@@ -131,9 +133,9 @@ void dump_viewer_to_png(const CarromEvalResultViewer* viewer, const char* file_p
 	}
 
 	// striker
-	if (viewer->strikerEnabled)
+	if (viewer->enables[IDX_STRIKER])
 	{
-		const b2Vec2 pos = viewer->strikerPosition;
+		const b2Vec2 pos = viewer->positions[IDX_STRIKER];
 		const int x = (int)(pos.x * scaleX + IMG_WIDTH / 2.f);
 		const int y = (int)(IMG_HEIGHT / 2.f - pos.y * scaleY);
 		const int r = (int)(viewer->radius[CarromObjectType_Striker] * scaleX);

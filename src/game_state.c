@@ -3,9 +3,33 @@
 
 #include "core.h"
 
-CarromPuck CarromPuck_New(const b2WorldId worldId, const CarromObjectPhysicsDef* physicsDef)
+const int32_t sPuckIndexes[PUCK_IDX_COUNT] = {
+	IDX_PUCK_BLACK_START,
+	IDX_PUCK_BLACK_START + 1,
+	IDX_PUCK_BLACK_START + 2,
+	IDX_PUCK_BLACK_START + 3,
+	IDX_PUCK_BLACK_START + 4,
+	IDX_PUCK_BLACK_START + 5,
+	IDX_PUCK_BLACK_START + 6,
+	IDX_PUCK_BLACK_START + 7,
+	IDX_PUCK_BLACK_START + 8,
+
+	IDX_PUCK_WHITE_START,
+	IDX_PUCK_WHITE_START + 1,
+	IDX_PUCK_WHITE_START + 2,
+	IDX_PUCK_WHITE_START + 3,
+	IDX_PUCK_WHITE_START + 4,
+	IDX_PUCK_WHITE_START + 5,
+	IDX_PUCK_WHITE_START + 6,
+	IDX_PUCK_WHITE_START + 7,
+	IDX_PUCK_WHITE_START + 8,
+
+	IDX_PUCK_RED,
+};
+
+CarromObject CarromPuck_New(const b2WorldId worldId, const CarromObjectPhysicsDef* physicsDef)
 {
-	CarromPuck puck = {0};
+	CarromObject puck = {0};
 	MACARON_ASSERT(physicsDef != NULL);
 	if (physicsDef == NULL)
 	{
@@ -38,10 +62,10 @@ void CarromGameState_CreateImpl(CarromGameState* state,
                                 const CarromObjectPhysicsDef* puckPhysicsDef,
                                 const CarromObjectPhysicsDef* strikerPhysicsDef,
                                 const CarromStrikerLimitDef* strikerLimitDef,
-                                int numOfPucks,
-                                const CarromPuckPositionDef* pucksPositions,
+                                int numOfPosDefs,
+                                const CarromObjectPositionDef* pucksPositions,
                                 int numOfPockets,
-                                const CarromPocketPositionDef* pocketsPositions)
+                                const CarromObjectPositionDef* pocketsPositions)
 {
 	MACARON_ASSERT(state != NULL);
 	MACARON_ASSERT(def != NULL);
@@ -51,14 +75,19 @@ void CarromGameState_CreateImpl(CarromGameState* state,
 	MACARON_ASSERT(strikerLimitDef != NULL);
 	MACARON_ASSERT(pucksPositions != NULL);
 	MACARON_ASSERT(pocketsPositions != NULL);
-	MACARON_ASSERT(numOfPucks > 0);
 	MACARON_ASSERT(numOfPockets > 0);
 
 	if (state == NULL || def == NULL || pocketDef == NULL || puckPhysicsDef == NULL || strikerPhysicsDef == NULL ||
-	    strikerLimitDef == NULL || pucksPositions == NULL || pocketsPositions == NULL || numOfPucks <= 0 ||
-	    numOfPockets <= 0)
+	    strikerLimitDef == NULL || pucksPositions == NULL || pocketsPositions == NULL
+	)
 	{
 		return;
+	}
+
+	if (b2World_IsValid(state->worldId))
+	{
+		b2DestroyWorld(state->worldId);
+		state->worldId = b2_nullWorldId;
 	}
 
 	state->worldDef = *def;
@@ -95,22 +124,32 @@ void CarromGameState_CreateImpl(CarromGameState* state,
 			chainDef.restitution = 1.0f;
 			b2CreateChain(state->wallBodyId, &chainDef);
 		}
+
+		b2Body_SetUserData(state->wallBodyId, (void*)(intptr_t)IDX_WALL);
+	}
+
+	for (int i = 0; i < NUM_OF_OBJECTS; i++)
+	{
+		state->objects[i].bodyId = b2_nullBodyId;
 	}
 
 	// pucks
 	{
-		state->numOfPucks = numOfPucks;
-		for (int i = 0; i < numOfPucks; i++)
-		{
-			CarromPuck puck = CarromPuck_New(state->worldId, puckPhysicsDef);
-			const CarromPuckPositionDef posDef = pucksPositions[i];
-			puck.index = i;
-			puck.color = posDef.color;
-			b2Body_SetTransform(puck.bodyId, posDef.position, b2Rot_identity);
-			state->pucks[i] = puck;
-			state->pucksPositionDefs[i] = posDef;
+		state->numOfPosDefs = numOfPosDefs;
 
-			b2Body_SetUserData(puck.bodyId, (void*)(intptr_t)i);
+		for (int i = 0; i < numOfPosDefs; i++)
+		{
+			CarromObject puck = CarromPuck_New(state->worldId, puckPhysicsDef);
+			const CarromObjectPositionDef posDef = pucksPositions[i];
+			puck.index = posDef.index;
+
+			MACARON_ASSERT(MACARON_IS_VALID_PUCK_IDX(puck.index));
+
+			b2Body_SetTransform(puck.bodyId, posDef.position, b2Rot_identity);
+			state->objects[puck.index] = puck;
+			state->objectPositionDefs[i] = posDef;
+
+			b2Body_SetUserData(puck.bodyId, (void*)(intptr_t)puck.index);
 		}
 	}
 
@@ -119,7 +158,7 @@ void CarromGameState_CreateImpl(CarromGameState* state,
 		state->numOfPockets = numOfPockets;
 		for (int i = 0; i < numOfPockets; i++)
 		{
-			const CarromPocketPositionDef posDef = pocketsPositions[i];
+			const CarromObjectPositionDef posDef = pocketsPositions[i];
 			const b2Circle circle = {posDef.position, pocketDef->radius};
 			b2ShapeDef shapeDef = b2DefaultShapeDef();
 			shapeDef.isSensor = true;
@@ -143,10 +182,16 @@ void CarromGameState_CreateImpl(CarromGameState* state,
 		shapeDef.restitution = strikerPhysicsDef->shapeRestitution;
 		shapeDef.density = strikerPhysicsDef->shapeDensity;
 
-		state->strikerBodyId = b2CreateBody(state->worldId, &strikerDef);
+		CarromObject striker = {0};
+		striker.index = IDX_STRIKER;
+		striker.bodyId = b2CreateBody(state->worldId, &strikerDef);
 
 		b2Circle circle = {{0.0f, 0.0f}, strikerPhysicsDef->radius};
-		b2CreateCircleShape(state->strikerBodyId, &shapeDef, &circle);
+		b2CreateCircleShape(striker.bodyId, &shapeDef, &circle);
+
+		b2Body_SetUserData(striker.bodyId, (void*)(intptr_t)IDX_STRIKER);
+
+		state->objects[IDX_STRIKER] = striker;
 	}
 }
 
@@ -224,15 +269,16 @@ typedef struct
 	b2Vec2 nearestPos;
 } FindNearestPuckData;
 
-FindNearestPuckData CarromGameState_FindNearestPuck(const CarromGameState* state, const CarromPuck* target,
+FindNearestPuckData CarromGameState_FindNearestPuck(const CarromGameState* state, const CarromObject* target,
                                                     const b2Vec2 pos)
 {
 	float minDistance = state->worldDef.width + state->worldDef.height;
 	FindNearestPuckData result = {false, minDistance, b2Vec2_zero};
 
-	for (int i = 0; i < state->numOfPucks; i++)
+	for (int i = 0; i < PUCK_IDX_COUNT; i++)
 	{
-		const CarromPuck* puck = &state->pucks[i];
+		const int idx = sPuckIndexes[i];
+		const CarromObject* puck = &state->objects[idx];
 		if (puck == target || !b2Body_IsEnabled(puck->bodyId))
 		{
 			continue;
@@ -252,25 +298,16 @@ FindNearestPuckData CarromGameState_FindNearestPuck(const CarromGameState* state
 	return result;
 }
 
-CarromPuckColor CarromGameState_GetPuckColor(const CarromGameState* state, const int index)
-{
-	MACARON_ASSERT(state != NULL);
-	MACARON_ASSERT(index >= 0 && index < state->numOfPucks);
-	if (state == NULL)
-	{
-		return CarromPuckColor_White;
-	}
-
-	const CarromPuck* puck = &state->pucks[index];
-	return puck->color;
-}
-
 b2Vec2 CarromGameState_GetPuckPosition(const CarromGameState* state, const int index)
 {
 	MACARON_ASSERT(state != NULL);
-	MACARON_ASSERT(index >= 0 && index < state->numOfPucks);
+	MACARON_ASSERT(MACARON_IS_VALID_PUCK_IDX(index));
+	if (state == NULL)
+	{
+		return b2Vec2_zero;
+	}
 
-	const CarromPuck* puck = &state->pucks[index];
+	const CarromObject* puck = &state->objects[index];
 	return b2Body_GetPosition(puck->bodyId);
 }
 
@@ -282,11 +319,18 @@ b2Vec2 CarromGameState_GetStrikerPosition(const CarromGameState* state)
 		return b2Vec2_zero;
 	}
 
-	return b2Body_GetPosition(state->strikerBodyId);
+	return b2Body_GetPosition(state->objects[IDX_STRIKER].bodyId);
 }
 
-b2Vec2 CarromGameState_PlacePuck(const CarromGameState* state, const CarromPuck* puck, const float step)
+b2Vec2 CarromGameState_PlacePuck(const CarromGameState* state, const CarromObject* puck, const float step)
 {
+	MACARON_ASSERT(state != NULL);
+	MACARON_ASSERT(puck != NULL);
+	if (state == NULL || puck == NULL)
+	{
+		return b2Vec2_zero;
+	}
+
 	const b2Vec2 targetPos = b2Body_GetPosition(puck->bodyId);
 	const FindNearestPuckData nearestData = CarromGameState_FindNearestPuck(state, puck, targetPos);
 
@@ -345,13 +389,13 @@ b2Vec2 CarromGameState_PlacePuck(const CarromGameState* state, const CarromPuck*
 b2Vec2 CarromGameState_PlacePuckToPos(const CarromGameState* state, const int index, const b2Vec2 pos)
 {
 	MACARON_ASSERT(state != NULL);
-	MACARON_ASSERT(index >= 0 && index < state->numOfPucks);
+	MACARON_ASSERT(MACARON_IS_VALID_PUCK_IDX(index));
 	if (state == NULL)
 	{
 		return b2Vec2_zero;
 	}
 
-	const CarromPuck* puck = &state->pucks[index];
+	const CarromObject* puck = &state->objects[index];
 	b2Body_SetTransform(puck->bodyId, pos, b2Rot_identity);
 
 	const float step = state->puckPhysicsDef.radius / 200.0f;
@@ -361,17 +405,17 @@ b2Vec2 CarromGameState_PlacePuckToPos(const CarromGameState* state, const int in
 void CarromGameState_PlacePuckToPosUnsafe(const CarromGameState* state, const int index, const b2Vec2 pos)
 {
 	MACARON_ASSERT(state != NULL);
-	MACARON_ASSERT(index >= 0 && index < state->numOfPucks);
+	MACARON_ASSERT(MACARON_IS_VALID_PUCK_IDX(index));
 
-	const CarromPuck* puck = &state->pucks[index];
+	const CarromObject* puck = &state->objects[index];
 	b2Body_SetTransform(puck->bodyId, pos, b2Rot_identity);
 }
 
 b2Vec2 CarromGameState_PlacePuckToCenter(const CarromGameState* state, const int index)
 {
-	MACARON_ASSERT(index >= 0 && index < state->numOfPucks);
+	MACARON_ASSERT(MACARON_IS_VALID_PUCK_IDX(index));
 
-	const CarromPuck* puck = &state->pucks[index];
+	const CarromObject* puck = &state->objects[index];
 
 	b2Body_SetTransform(puck->bodyId, b2Vec2_zero, b2Rot_identity);
 
@@ -389,9 +433,11 @@ FindNearestPuckData CarromGameState_FindStrikerNearestPuck(const CarromGameState
 
 	FindNearestPuckData result = {false, minDistance, b2Vec2_zero};
 
-	for (int i = 0; i < state->numOfPucks; i++)
+	for (int i = 0; i < PUCK_IDX_COUNT; i++)
 	{
-		const CarromPuck* puck = &state->pucks[i];
+		const int idx = sPuckIndexes[i];
+		const CarromObject* puck = &state->objects[idx];
+
 		if (!b2Body_IsEnabled(puck->bodyId))
 		{
 			continue;
@@ -472,11 +518,42 @@ b2Vec2 CarromGameState_LimitStrikerPos(const CarromGameState* state, const Carro
 	return finalPos;
 }
 
+void CarromGameState_EnableStriker(const CarromGameState* state)
+{
+	MACARON_ASSERT(state != NULL);
+	if (state == NULL)
+	{
+		return;
+	}
+	b2Body_Enable(state->objects[IDX_STRIKER].bodyId);
+}
+
+void CarromGameState_DisableStriker(const CarromGameState* state)
+{
+	MACARON_ASSERT(state != NULL);
+	if (state == NULL)
+	{
+		return;
+	}
+	b2Body_Disable(state->objects[IDX_STRIKER].bodyId);
+}
+
+bool CarromGameState_IsStrikerEnabled(const CarromGameState* state)
+{
+	MACARON_ASSERT(state != NULL);
+	if (state == NULL)
+	{
+		return false;
+	}
+	return b2Body_IsEnabled(state->objects[IDX_STRIKER].bodyId);
+}
+
 b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTablePosition tablePos, const b2Vec2 pos)
 {
-	b2Vec2 finalPos = CarromGameState_LimitStrikerPos(state, tablePos, pos);
+	const b2Vec2 finalPos = CarromGameState_LimitStrikerPos(state, tablePos, pos);
 
-	b2Body_SetTransform(state->strikerBodyId, finalPos, b2Rot_identity);
+	const b2BodyId strikerBodyId = state->objects[IDX_STRIKER].bodyId;
+	b2Body_SetTransform(strikerBodyId, finalPos, b2Rot_identity);
 
 	const FindNearestPuckData nearestData = CarromGameState_FindStrikerNearestPuck(state, finalPos);
 	if (!nearestData.found)
@@ -561,14 +638,14 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 
 		after = CarromGameState_LimitStrikerPos(state, tablePos, after);
 
-		b2Body_SetTransform(state->strikerBodyId, after, b2Rot_identity);
+		b2Body_SetTransform(strikerBodyId, after, b2Rot_identity);
 
 		bool reversed = false;
 		const float step = state->strikerPhysicsDef.radius / 100.0f;
 
 		while (true)
 		{
-			const b2Vec2 placePos = b2Body_GetPosition(state->strikerBodyId);
+			const b2Vec2 placePos = b2Body_GetPosition(strikerBodyId);
 			const FindNearestPuckData data = CarromGameState_FindStrikerNearestPuck(state, placePos);
 			if (!data.found || data.minDistance > strikerR + puckR)
 			{
@@ -629,7 +706,7 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 				}
 			}
 
-			b2Body_SetTransform(state->strikerBodyId, newPos, b2Rot_identity);
+			b2Body_SetTransform(strikerBodyId, newPos, b2Rot_identity);
 		}
 	}
 
@@ -665,44 +742,46 @@ void CarromGameState_Strike(const CarromGameState* state, b2Vec2 impulse)
 		return;
 	}
 
+	const b2BodyId strikerBodyId = state->objects[IDX_STRIKER].bodyId;
+
 	const float force = b2Length(impulse);
 	if (force > state->strikerLimitDef.maxForce)
 	{
 		const float scale = state->strikerLimitDef.maxForce / force;
 		impulse = b2MulSV(scale, impulse);
 	}
-	if (!b2Body_IsEnabled(state->strikerBodyId))
+	if (!b2Body_IsEnabled(strikerBodyId))
 	{
-		b2Body_Enable(state->strikerBodyId);
+		b2Body_Enable(strikerBodyId);
 	}
-	b2Body_ApplyForceToCenter(state->strikerBodyId, impulse, true);
+	b2Body_ApplyForceToCenter(strikerBodyId, impulse, true);
 }
 
-CarromSnapshot CarromGameState_TakeSnapshot(const CarromGameState* state)
+CarromFrame CarromGameState_TakeSnapshot(const CarromGameState* state)
 {
 	MACARON_ASSERT(state != NULL);
 	MACARON_ASSERT(b2World_IsValid(state->worldId));
 
-	CarromSnapshot snapshot = {0};
-	for (int i = 0; i < state->numOfPucks; i++)
+	CarromFrame frame = {0};
+	for (int i = 0; i < NUM_OF_OBJECTS; i++)
 	{
-		const CarromPuck* puck = &state->pucks[i];
-		if (b2Body_IsEnabled(puck->bodyId))
+		const CarromObject* obj = &state->objects[i];
+		if (!B2_ID_EQUALS(b2_nullBodyId, obj->bodyId))
 		{
-			snapshot.enabledPucks[snapshot.numOfEnabledPucks].index = puck->index;
-			snapshot.enabledPucks[snapshot.numOfEnabledPucks].position = b2Body_GetPosition(puck->bodyId);
-			snapshot.numOfEnabledPucks++;
+			frame.snapshots[i].index = i;
+			frame.snapshots[i].enable = b2Body_IsEnabled(obj->bodyId);
+			frame.snapshots[i].position = b2Body_GetPosition(obj->bodyId);
 		}
 	}
 
-	return snapshot;
+	return frame;
 }
 
-void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromSnapshot* snapshot, const bool recreate)
+void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromFrame* frame, const bool recreate)
 {
 	MACARON_ASSERT(state != NULL);
-	MACARON_ASSERT(snapshot != NULL);
-	if (state == NULL || snapshot == NULL)
+	MACARON_ASSERT(frame != NULL);
+	if (state == NULL || frame == NULL)
 	{
 		return;
 	}
@@ -716,30 +795,36 @@ void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromSnapshot*
 		                           &state->puckPhysicsDef,
 		                           &state->strikerPhysicsDef,
 		                           &state->strikerLimitDef,
-		                           state->numOfPucks,
-		                           state->pucksPositionDefs,
+		                           state->numOfPosDefs,
+		                           state->objectPositionDefs,
 		                           state->numOfPockets,
 		                           state->pocketsPositionDefs
 			);
 	}
 
-	// disable striker
-	b2Body_Disable(state->strikerBodyId);
-
-	// disable all pucks
-	for (int i = 0; i < state->numOfPucks; i++)
+	// disable all objects
+	for (int i = 0; i < NUM_OF_OBJECTS; i++)
 	{
-		const CarromPuck* puck = &state->pucks[i];
-		b2Body_Disable(puck->bodyId);
+		const b2BodyId bodyId = state->objects[i].bodyId;
+		if (!B2_ID_EQUALS(bodyId, b2_nullBodyId))
+		{
+			b2Body_Disable(bodyId);
+		}
 	}
 
 	// enable pucks, set position
-	for (int i = 0; i < snapshot->numOfEnabledPucks; i++)
+	for (int i = 0; i < NUM_OF_OBJECTS; i++)
 	{
-		const CarromPuckSnapshot* puckSnapshot = &snapshot->enabledPucks[i];
-		const CarromPuck* puck = &state->pucks[puckSnapshot->index];
-		b2Body_Enable(puck->bodyId);
-		b2Body_SetTransform(puck->bodyId, puckSnapshot->position, b2Rot_identity);
+		const CarromObjectSnapshot* objectSnapshot = &frame->snapshots[i];
+		if (MACARON_IS_VALID_OBJ_IDX(objectSnapshot->index))
+		{
+			const CarromObject* object = &state->objects[objectSnapshot->index];
+			if (objectSnapshot->enable)
+			{
+				b2Body_Enable(object->bodyId);
+			}
+			b2Body_SetTransform(object->bodyId, objectSnapshot->position, b2Rot_identity);
+		}
 	}
 }
 
@@ -750,14 +835,31 @@ void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromSnapshot*
  * ANY OTHER OBJECTS SHOULD NOT BE DYNAMIC
  *
  * @param state Game state
- * @param output Output frame
+ * @param frame Output frame
+ * @param pucksHitPocket number of pucks hit pocket
  */
-void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* output)
+void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* frame, int32_t* pucksHitPocket)
 {
-	bool strikerHitPocket = false;
-	bool pucksHitPocket[MAX_PUCK_CAPACITY] = {0};
-	bool strikerHitOtherObject = false;
-	bool pucksHitOtherObject[MAX_PUCK_CAPACITY] = {0};
+	// striker body id
+	const b2BodyId strikerBodyId = state->objects[IDX_STRIKER].bodyId;
+
+	// dump all objects first
+	for (int i = 0; i < NUM_OF_OBJECTS; i++)
+	{
+		CarromObjectSnapshot* snapshot = &frame->snapshots[i];
+		const b2BodyId objectBodyId = state->objects[i].bodyId;
+		if (!B2_ID_EQUALS(objectBodyId, b2_nullBodyId))
+		{
+			snapshot->index = i;
+			snapshot->enable = b2Body_IsEnabled(objectBodyId);
+			snapshot->position = b2Body_GetPosition(objectBodyId);
+			snapshot->hitEvent = CarromHitEventType_None;
+		}
+		else
+		{
+			snapshot->index = -1;
+		}
+	}
 
 	// sensor events
 	const b2SensorEvents sensorEvents = b2World_GetSensorEvents(state->worldId);
@@ -777,24 +879,22 @@ void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* 
 			const b2ShapeId visitorId = sensorEvent->visitorShapeId;
 			const b2BodyId bodyId = b2Shape_GetBody(visitorId);
 
-			if (B2_ID_EQUALS(bodyId, state->strikerBodyId))
-			{
-				// striker hits the sensor, foul
-				strikerHitPocket = true;
+			const int32_t objectIndex = (int32_t)(intptr_t)b2Body_GetUserData(bodyId);
 
-				// disable striker
-				b2Body_Disable(state->strikerBodyId);
-			}
-			else
-			{
-				// puck hits the sensor
-				const int32_t puckIndex = (int32_t)(intptr_t)b2Body_GetUserData(bodyId);
-				MACARON_ASSERT(puckIndex >= 0 && puckIndex < state->numOfPucks);
-				pucksHitPocket[puckIndex] = true;
+			b2Body_Disable(bodyId);
 
-				// disable puck
-				b2Body_Disable(state->pucks[puckIndex].bodyId);
+			if (objectIndex == IDX_STRIKER)
+			{
+				frame->strikerHitPocket = true;
 			}
+
+			(*pucksHitPocket)++;
+			frame->pucksHitPocket = *pucksHitPocket;
+
+			frame->snapshots[objectIndex].hitPocketIndex = *pucksHitPocket;
+			frame->snapshots[objectIndex].enable = false;
+			frame->snapshots[objectIndex].hitPocket = true;
+			frame->snapshots[objectIndex].hitEvent = CarromHitEventType_HitPocket;
 		}
 	}
 
@@ -811,36 +911,79 @@ void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* 
 			const b2BodyId bodyIdA = b2Shape_GetBody(shapeIdA);
 			const b2BodyId bodyIdB = b2Shape_GetBody(shapeIdB);
 
-			b2BodyId strikerBodyId = b2_nullBodyId;
-			b2BodyId puckBodyId = b2_nullBodyId;
+			// case 1, striker hits the wall
+			// case 2, puck hits the wall
+			// case 3, striker hits the puck
+			// case 4, puck hits the puck
 
-			if (B2_ID_EQUALS(bodyIdA, state->strikerBodyId))
+			if (B2_ID_EQUALS(bodyIdA, state->wallBodyId) || B2_ID_EQUALS(bodyIdB, state->wallBodyId))
 			{
-				strikerBodyId = bodyIdA;
+				// wall
+				if (B2_ID_EQUALS(bodyIdA, strikerBodyId) || B2_ID_EQUALS(bodyIdB, strikerBodyId))
+				{
+					// striker hits the wall
+					if (frame->snapshots[IDX_STRIKER].hitEvent == CarromHitEventType_None)
+					{
+						frame->snapshots[IDX_STRIKER].hitEvent = CarromHitEventType_HitWall;
+					}
+				}
+				else
+				{
+					// puck hits the wall
+					b2BodyId puckBodyId;
+					if (!B2_ID_EQUALS(bodyIdA, state->wallBodyId))
+					{
+						puckBodyId = bodyIdA;
+					}
+					else
+					{
+						puckBodyId = bodyIdB;
+					}
+					const int32_t puckIndex = (int32_t)(intptr_t)b2Body_GetUserData(puckBodyId);
+					if (frame->snapshots[puckIndex].hitEvent == CarromHitEventType_None)
+					{
+						frame->snapshots[puckIndex].hitEvent = CarromHitEventType_HitWall;
+					}
+				}
 			}
-			else if (!B2_ID_EQUALS(bodyIdA, state->wallBodyId))
+			else
 			{
-				puckBodyId = bodyIdA;
-			}
-
-			if (B2_ID_EQUALS(bodyIdB, state->strikerBodyId))
-			{
-				strikerBodyId = bodyIdB;
-			}
-			else if (!B2_ID_EQUALS(bodyIdB, state->wallBodyId))
-			{
-				puckBodyId = bodyIdB;
-			}
-
-			if (B2_IS_NON_NULL(strikerBodyId))
-			{
-				strikerHitOtherObject = true;
-			}
-			if (B2_IS_NON_NULL(puckBodyId))
-			{
-				const int32_t puckIndex = (int32_t)(intptr_t)b2Body_GetUserData(puckBodyId);
-				MACARON_ASSERT(puckIndex >= 0 && puckIndex < state->numOfPucks);
-				pucksHitOtherObject[puckIndex] = true;
+				if (B2_ID_EQUALS(bodyIdA, strikerBodyId) || B2_ID_EQUALS(bodyIdB, strikerBodyId))
+				{
+					// striker hits the puck
+					b2BodyId puckBodyId;
+					if (B2_ID_EQUALS(bodyIdA, strikerBodyId))
+					{
+						puckBodyId = bodyIdB;
+					}
+					else
+					{
+						puckBodyId = bodyIdA;
+					}
+					const int32_t otherIndex = (int32_t)(intptr_t)b2Body_GetUserData(puckBodyId);
+					if (frame->snapshots[IDX_STRIKER].hitEvent == CarromHitEventType_None)
+					{
+						frame->snapshots[IDX_STRIKER].hitEvent = CarromHitEventType_HitPuck;
+					}
+					if (frame->snapshots[otherIndex].hitEvent == CarromHitEventType_None)
+					{
+						frame->snapshots[otherIndex].hitEvent = CarromHitEventType_HitPuck;
+					}
+				}
+				else
+				{
+					// puck hits the puck
+					const int32_t puckIndexA = (int32_t)(intptr_t)b2Body_GetUserData(bodyIdA);
+					const int32_t puckIndexB = (int32_t)(intptr_t)b2Body_GetUserData(bodyIdB);
+					if (frame->snapshots[puckIndexA].hitEvent == CarromHitEventType_None)
+					{
+						frame->snapshots[puckIndexA].hitEvent = CarromHitEventType_HitPuck;
+					}
+					if (frame->snapshots[puckIndexB].hitEvent == CarromHitEventType_None)
+					{
+						frame->snapshots[puckIndexB].hitEvent = CarromHitEventType_HitPuck;
+					}
+				}
 			}
 		}
 	}
@@ -852,27 +995,11 @@ void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* 
 		for (int i = 0; i < bodyEvents.moveCount; i++)
 		{
 			const b2BodyMoveEvent* bodyMoveEvent = &bodyEvents.moveEvents[i];
-			CarromObjectMovement* movement = &output->movements[output->movementCount];
-			movement->position = bodyMoveEvent->transform.p;
-
-			if (B2_ID_EQUALS(bodyMoveEvent->bodyId, state->strikerBodyId))
+			const int32_t idx = (int32_t)(intptr_t)b2Body_GetUserData(bodyMoveEvent->bodyId);
+			if (idx >= 0 && idx < NUM_OF_OBJECTS)
 			{
-				// striker moves
-				movement->type = CarromObjectType_Striker;
-				movement->hitPocket = strikerHitPocket;
-				movement->hitObject = strikerHitOtherObject;
+				frame->snapshots[idx].position = bodyMoveEvent->transform.p;
 			}
-			else
-			{
-				// puck moves
-				const int32_t puckIndex = (int32_t)(intptr_t)b2Body_GetUserData(bodyMoveEvent->bodyId);
-				movement->type = CarromObjectType_Puck;
-				movement->index = puckIndex;
-				movement->hitPocket = pucksHitPocket[puckIndex];
-				movement->hitObject = pucksHitOtherObject[puckIndex];
-			}
-
-			output->movementCount++;
 		}
 	}
 }
@@ -887,22 +1014,25 @@ CarromEvalResult CarromGameState_Eval(const CarromGameState* state, const int ma
 
 	const int caps = maxSteps == 0 ? MAX_FRAME_CAPACITY : maxSteps;
 
-	while (result.frameCount < caps)
+	while (result.numFrames < caps)
 	{
 		b2World_Step(state->worldId, state->worldDef.frameDuration, state->worldDef.subStep);
 
 		// dump frame
-		CarromFrame* frame = &result.frames[result.frameCount];
-		frame->index = result.frameCount;
+		CarromFrame* frame = &result.frames[result.numFrames];
+		frame->index = result.numFrames;
 
-		CarromGameState_DumpSingleFrame(state, frame);
+		CarromGameState_DumpSingleFrame(state, frame, &frame->pucksHitPocket);
 
-		result.frameCount++;
+		result.strikerHitPocket |= frame->strikerHitPocket;
+		result.pucksHitPocket += frame->pucksHitPocket;
+
+		result.numFrames++;
 
 		if (!CarromGameState_HasMovement(state))
 		{
 			// disable striker
-			b2Body_Disable(state->strikerBodyId);
+			b2Body_Disable(state->objects[IDX_STRIKER].bodyId);
 
 			break;
 		}

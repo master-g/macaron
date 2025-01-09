@@ -70,31 +70,31 @@ void CarromGameDef_PlacePucks(CarromGameDef* def)
 
 	MACARON_ASSERT(outR > 0.0f);
 
-	const CarromPuckPositionDef posDefs[] = {
-		{CarromPuckColor_Red, {0.0f, 0.0f}},
+	const CarromObjectPositionDef posDefs[] = {
+		{IDX_PUCK_RED, {0.0f, 0.0f}},
 
-		{CarromPuckColor_Black, {-outR * 2, 0.0f}},
-		{CarromPuckColor_Black, {-outR * 3, outR * 2 * SPI3}},
-		{CarromPuckColor_Black, {-outR * 3, -outR * 2 * SPI3}},
-		{CarromPuckColor_Black, {outR, outR * 2 * SPI3}},
-		{CarromPuckColor_Black, {outR * 3, outR * 2 * SPI3}},
-		{CarromPuckColor_Black, {outR * 3, -outR * 2 * SPI3}},
-		{CarromPuckColor_Black, {outR, -outR * 2 * SPI3}},
-		{CarromPuckColor_Black, {0.0f, outR * 4 * SPI3}},
-		{CarromPuckColor_Black, {0.0f, -outR * 4 * SPI3}},
+		{IDX_PUCK_BLACK_START + 0, {-outR * 2, 0.0f}},
+		{IDX_PUCK_BLACK_START + 1, {-outR * 3, outR * 2 * SPI3}},
+		{IDX_PUCK_BLACK_START + 2, {-outR * 3, -outR * 2 * SPI3}},
+		{IDX_PUCK_BLACK_START + 3, {outR, outR * 2 * SPI3}},
+		{IDX_PUCK_BLACK_START + 4, {outR * 3, outR * 2 * SPI3}},
+		{IDX_PUCK_BLACK_START + 5, {outR * 3, -outR * 2 * SPI3}},
+		{IDX_PUCK_BLACK_START + 6, {outR, -outR * 2 * SPI3}},
+		{IDX_PUCK_BLACK_START + 7, {0.0f, outR * 4 * SPI3}},
+		{IDX_PUCK_BLACK_START + 8, {0.0f, -outR * 4 * SPI3}},
 
-		{CarromPuckColor_White, {-outR * 4, 0.0f}},
-		{CarromPuckColor_White, {outR * 2, 0.0f}},
-		{CarromPuckColor_White, {outR * 4, 0.0f}},
-		{CarromPuckColor_White, {-outR * 2 * 0.5f, outR * 2 * SPI3}},
-		{CarromPuckColor_White, {-outR * 4 * 0.5f, outR * 4 * SPI3}},
-		{CarromPuckColor_White, {-outR * 2 * 0.5f, -outR * 2 * SPI3}},
-		{CarromPuckColor_White, {-outR * 4 * 0.5f, -outR * 4 * SPI3}},
-		{CarromPuckColor_White, {outR * 4 * 0.5f, -outR * 4 * SPI3}},
-		{CarromPuckColor_White, {outR * 4 * 0.5f, outR * 4 * SPI3}},
+		{IDX_PUCK_WHITE_START + 0, {-outR * 4, 0.0f}},
+		{IDX_PUCK_WHITE_START + 1, {outR * 2, 0.0f}},
+		{IDX_PUCK_WHITE_START + 2, {outR * 4, 0.0f}},
+		{IDX_PUCK_WHITE_START + 3, {-outR * 2 * 0.5f, outR * 2 * SPI3}},
+		{IDX_PUCK_WHITE_START + 4, {-outR * 4 * 0.5f, outR * 4 * SPI3}},
+		{IDX_PUCK_WHITE_START + 5, {-outR * 2 * 0.5f, -outR * 2 * SPI3}},
+		{IDX_PUCK_WHITE_START + 6, {-outR * 4 * 0.5f, -outR * 4 * SPI3}},
+		{IDX_PUCK_WHITE_START + 7, {outR * 4 * 0.5f, -outR * 4 * SPI3}},
+		{IDX_PUCK_WHITE_START + 8, {outR * 4 * 0.5f, outR * 4 * SPI3}},
 	};
 
-	const int count = sizeof(posDefs) / sizeof(CarromPuckPositionDef);
+	const int count = sizeof(posDefs) / sizeof(CarromObjectPositionDef);
 	for (int i = 0; i < count; i++)
 	{
 		def->pucksPositions[i] = posDefs[i];
@@ -118,14 +118,14 @@ void CarromGameDef_PlacePockets(CarromGameDef* def)
 
 	MACARON_ASSERT(w > 0.0f && h > 0.0f);
 
-	const CarromPocketPositionDef posDefs[] = {
-		{{-w / 2 + r / 2, h / 2 - r / 2}},
-		{{w / 2 - r / 2, h / 2 - r / 2}},
-		{{-w / 2 + r / 2, -h / 2 + r / 2}},
-		{{w / 2 - r / 2, -h / 2 + r / 2}},
+	const CarromObjectPositionDef posDefs[] = {
+		{-1, {-w / 2 + r / 2, h / 2 - r / 2}},
+		{-1, {w / 2 - r / 2, h / 2 - r / 2}},
+		{-1, {-w / 2 + r / 2, -h / 2 + r / 2}},
+		{-1, {w / 2 - r / 2, -h / 2 + r / 2}},
 	};
 
-	const int count = sizeof(posDefs) / sizeof(CarromPocketPositionDef);
+	const int count = sizeof(posDefs) / sizeof(CarromObjectPositionDef);
 	for (int i = 0; i < count; i++)
 	{
 		def->pocketsPositions[i] = posDefs[i];

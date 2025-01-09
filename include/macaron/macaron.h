@@ -55,16 +55,6 @@ MACARON_API void CarromGameState_Step(const CarromGameState* state);
 MACARON_API b2Vec2 CarromGameState_GetPuckPosition(const CarromGameState* state, int index);
 
 /**
- * @brief Get puck color
- *
- * @param state game state
- * @param index puck index
- *
- * @return puck color
- */
-MACARON_API CarromPuckColor CarromGameState_GetPuckColor(const CarromGameState* state, int index);
-
-/**
  * @brief Get striker position
  *
  * @param state game state
@@ -115,6 +105,12 @@ MACARON_API void CarromGameState_PlacePuckToPosUnsafe(const CarromGameState* sta
  */
 MACARON_API b2Vec2 CarromGameState_PlacePuckToCenter(const CarromGameState* state, int index);
 
+MACARON_API void CarromGameState_EnableStriker(const CarromGameState* state);
+
+MACARON_API void CarromGameState_DisableStriker(const CarromGameState* state);
+
+MACARON_API bool CarromGameState_IsStrikerEnabled(const CarromGameState* state);
+
 /**
  * @brief Place striker to the desired position
  *
@@ -154,16 +150,16 @@ MACARON_API void CarromGameState_Strike(const CarromGameState* state, b2Vec2 imp
  *
  * @return snapshot of the game state
  */
-MACARON_API CarromSnapshot CarromGameState_TakeSnapshot(const CarromGameState* state);
+MACARON_API CarromFrame CarromGameState_TakeSnapshot(const CarromGameState* state);
 
 /**
  * @brief Apply snapshot to the game state
  *
  * @param state game state
- * @param snapshot snapshot of the game state
+ * @param frame snapshot of the game state
  * @param recreate recreate the game state
  */
-MACARON_API void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromSnapshot* snapshot, bool recreate);
+MACARON_API void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromFrame* frame, bool recreate);
 
 /**
  * @brief Let the game state steps until no more movements
