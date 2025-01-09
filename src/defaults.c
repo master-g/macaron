@@ -17,9 +17,9 @@ CarromWorldDef CarromDefaultWorldDef(void)
 	return def;
 }
 
-CarromPuckPhysicsDef CarromDefaultPuckPhysicsDef(void)
+CarromObjectPhysicsDef CarromDefaultPuckPhysicsDef(void)
 {
-	CarromPuckPhysicsDef def = {0};
+	CarromObjectPhysicsDef def = {0};
 	def.radius = 0.16f;
 	def.gap = 0.0001f;
 	def.bodyLinearDamping = 1.8f;
@@ -30,9 +30,9 @@ CarromPuckPhysicsDef CarromDefaultPuckPhysicsDef(void)
 	return def;
 }
 
-CarromPuckPhysicsDef CarromDefaultStrikerPhysicsDef(void)
+CarromObjectPhysicsDef CarromDefaultStrikerPhysicsDef(void)
 {
-	CarromPuckPhysicsDef def = {0};
+	CarromObjectPhysicsDef def = {0};
 	def.radius = 0.2176f;
 	def.bodyLinearDamping = 2.8f;
 	def.bodyAngularDamping = 5.0f;

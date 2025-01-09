@@ -26,8 +26,8 @@ typedef struct CarromWorldDef
 
 MACARON_API CarromWorldDef CarromDefaultWorldDef(void);
 
-// Puck physics def
-typedef struct CarromPuckPhysicsDef
+// Carrom object physics def
+typedef struct CarromObjectPhysicsDef
 {
 	// radius
 	float radius;
@@ -44,11 +44,11 @@ typedef struct CarromPuckPhysicsDef
 	// shape density
 	float shapeDensity;
 
-} CarromPuckPhysicsDef;
+} CarromObjectPhysicsDef;
 
-MACARON_API CarromPuckPhysicsDef CarromDefaultPuckPhysicsDef(void);
+MACARON_API CarromObjectPhysicsDef CarromDefaultPuckPhysicsDef(void);
 
-MACARON_API CarromPuckPhysicsDef CarromDefaultStrikerPhysicsDef(void);
+MACARON_API CarromObjectPhysicsDef CarromDefaultStrikerPhysicsDef(void);
 
 // Pocket def
 typedef struct CarromPocketDef
@@ -82,8 +82,10 @@ typedef enum CarromPuckColor
 // Player position
 typedef enum CarromTablePosition
 {
-	CarromTablePosition_Top,
 	CarromTablePosition_Bottom,
+	CarromTablePosition_Left,
+	CarromTablePosition_Top,
+	CarromTablePosition_Right,
 
 } CarromTablePosition;
 
@@ -123,9 +125,9 @@ typedef struct CarromGameDef
 	// world def
 	CarromWorldDef worldDef;
 	// pucks physics def
-	CarromPuckPhysicsDef puckPhysicsDef;
+	CarromObjectPhysicsDef puckPhysicsDef;
 	// striker physics def
-	CarromPuckPhysicsDef strikerPhysicsDef;
+	CarromObjectPhysicsDef strikerPhysicsDef;
 	// pocket def
 	CarromPocketDef pocketDef;
 	// striker def
@@ -164,11 +166,11 @@ typedef struct CarromGameState
 	// world def
 	CarromWorldDef worldDef;
 	// puck physics def
-	CarromPuckPhysicsDef puckPhysicsDef;
+	CarromObjectPhysicsDef puckPhysicsDef;
 	// pocket def
 	CarromPocketDef pocketDef;
 	// striker physics def
-	CarromPuckPhysicsDef strikerPhysicsDef;
+	CarromObjectPhysicsDef strikerPhysicsDef;
 	// striker limit def
 	CarromStrikerLimitDef strikerLimitDef;
 

@@ -1,5 +1,7 @@
 #include "dumper.h"
 
+#include <macaron/macaron.h>
+
 #define OLIVEC_IMPLEMENTATION
 #include "extern/olive.c"
 
@@ -8,6 +10,24 @@
 
 
 static uint32_t pixels[IMG_WIDTH * IMG_HEIGHT];
+
+void draw_limiter(const Olivec_Canvas* oc, const float width, const float offCenter, const float scaleX, const float scaleY)
+{
+	// striker limiter
+	const int topLeftX = (int)(-width / 2 * scaleX + IMG_WIDTH / 2.f);
+	const int topRightX = (int)(width / 2 * scaleX + IMG_WIDTH / 2.f);
+	const int topY = (int)(IMG_HEIGHT / 2.f - offCenter * scaleY);
+	const int bottomY = (int)(IMG_HEIGHT / 2.f + offCenter * scaleY);
+	olivec_line(*oc, topLeftX, topY, topRightX, topY, 0xFF000000);
+	olivec_line(*oc, topLeftX, bottomY, topRightX, bottomY, 0xFF000000);
+
+	const int leftX = (int)(IMG_WIDTH / 2.f - offCenter * scaleX);
+	const int rightX = (int)(IMG_WIDTH / 2.f + offCenter * scaleX);
+	const int leftTopY = (int)(-width / 2 * scaleY + IMG_HEIGHT / 2.f);
+	const int leftBottomY = (int)(width / 2 * scaleY + IMG_HEIGHT / 2.f);
+	olivec_line(*oc, leftX, leftTopY, leftX, leftBottomY, 0xFF000000);
+	olivec_line(*oc, rightX, leftTopY, rightX, leftBottomY, 0xFF000000);
+}
 
 void dump_game_state_to_png(const CarromGameState* state, const char* file_path)
 {
@@ -18,14 +38,7 @@ void dump_game_state_to_png(const CarromGameState* state, const char* file_path)
 	olivec_fill(oc, 0xFF78BBF0);
 
 	// striker limiter
-	const float strikerLimitWidth = state->strikerLimitDef.width;
-	const float strikerCenterOffset = state->strikerLimitDef.centerOffset;
-	const int x0 = (int)(-strikerLimitWidth / 2 * scaleX + IMG_WIDTH / 2.f);
-	const int x1 = (int)(strikerLimitWidth / 2 * scaleX + IMG_WIDTH / 2.f);
-	const int y0 = (int)(IMG_HEIGHT / 2.f - strikerCenterOffset * scaleY);
-	const int y1 = (int)(IMG_HEIGHT / 2.f + strikerCenterOffset * scaleY);
-	olivec_line(oc, x0, y0, x1, y0, 0xFF000000);
-	olivec_line(oc, x0, y1, x1, y1, 0xFF000000);
+	draw_limiter(&oc, state->strikerLimitDef.width, state->strikerLimitDef.centerOffset, scaleX, scaleY);
 
 	// pockets
 	for (int i = 0; i < state->numOfPockets; i++)
@@ -82,14 +95,7 @@ void dump_viewer_to_png(const CarromEvalResultViewer* viewer, const char* file_p
 	olivec_fill(oc, 0xFF78BBF0);
 
 	// striker limiter
-	const float strikerLimitWidth = viewer->strikerLimitWidth;
-	const float strikerCenterOffset = viewer->strikerLimitOffCenter;
-	const int x0 = (int)(-strikerLimitWidth / 2 * scaleX + IMG_WIDTH / 2.f);
-	const int x1 = (int)(strikerLimitWidth / 2 * scaleX + IMG_WIDTH / 2.f);
-	const int y0 = (int)(IMG_HEIGHT / 2.f - strikerCenterOffset * scaleY);
-	const int y1 = (int)(IMG_HEIGHT / 2.f + strikerCenterOffset * scaleY);
-	olivec_line(oc, x0, y0, x1, y0, 0xFF000000);
-	olivec_line(oc, x0, y1, x1, y1, 0xFF000000);
+	draw_limiter(&oc, viewer->strikerLimitWidth, viewer->strikerLimitOffCenter, scaleX, scaleY);
 
 	// pockets
 	for (int i = 0; i < viewer->numOfPockets; i++)

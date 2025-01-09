@@ -2,7 +2,6 @@
 
 #include "base.h"
 #include "types.h"
-#include "viewer.h"
 
 // Game def
 
@@ -124,11 +123,11 @@ MACARON_API b2Vec2 CarromGameState_PlacePuckToCenter(const CarromGameState* stat
  *
  * @param state game state
  * @param tablePos position on the table
- * @param x desire x translation
+ * @param pos desire striker translation
  *
  * @return final position of the striker
  */
-MACARON_API b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, CarromTablePosition tablePos, float x);
+MACARON_API b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, CarromTablePosition tablePos, b2Vec2 pos);
 
 /**
  * @brief Check if the striker is overlapping with other pucks

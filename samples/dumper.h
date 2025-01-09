@@ -1,6 +1,6 @@
 #pragma once
 
-#include <macaron/macaron.h>
+#include <macaron/viewer.h>
 
 #define IMG_WIDTH 512
 #define IMG_HEIGHT 512

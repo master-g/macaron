@@ -3,7 +3,7 @@
 
 #include "core.h"
 
-CarromPuck CarromPuck_New(const b2WorldId worldId, const CarromPuckPhysicsDef* physicsDef)
+CarromPuck CarromPuck_New(const b2WorldId worldId, const CarromObjectPhysicsDef* physicsDef)
 {
 	CarromPuck puck = {0};
 	MACARON_ASSERT(physicsDef != NULL);
@@ -35,8 +35,8 @@ CarromPuck CarromPuck_New(const b2WorldId worldId, const CarromPuckPhysicsDef* p
 void CarromGameState_CreateImpl(CarromGameState* state,
                                 const CarromWorldDef* def,
                                 const CarromPocketDef* pocketDef,
-                                const CarromPuckPhysicsDef* puckPhysicsDef,
-                                const CarromPuckPhysicsDef* strikerPhysicsDef,
+                                const CarromObjectPhysicsDef* puckPhysicsDef,
+                                const CarromObjectPhysicsDef* strikerPhysicsDef,
                                 const CarromStrikerLimitDef* strikerLimitDef,
                                 int numOfPucks,
                                 const CarromPuckPositionDef* pucksPositions,
@@ -411,37 +411,77 @@ FindNearestPuckData CarromGameState_FindStrikerNearestPuck(const CarromGameState
 	return result;
 }
 
-b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTablePosition tablePos, const float x)
+b2Vec2 CarromGameState_LimitStrikerPos(const CarromGameState* state, const CarromTablePosition tablePos, const b2Vec2 pos)
 {
-	b2Vec2 pos = {x, 0.0f};
-	if (tablePos == CarromTablePosition_Top)
-	{
-		pos.y = state->strikerLimitDef.centerOffset;
-	}
-	else
-	{
-		pos.y = -state->strikerLimitDef.centerOffset;
-	}
+	b2Vec2 finalPos = pos;
 
 	const float strikerLimitWidth = state->strikerLimitDef.width;
-	const float left = -strikerLimitWidth / 2;
-	const float right = strikerLimitWidth / 2;
+	const float centerOffset = state->strikerLimitDef.centerOffset;
 
-	if (pos.x < left)
+	const float horizontalLeftX = -strikerLimitWidth / 2;
+	const float horizontalRightX = strikerLimitWidth / 2;
+	const float horizontalTopY = centerOffset;
+	const float horizontalBottomY = -centerOffset;
+	const float verticalTopY = strikerLimitWidth / 2;
+	const float verticalBottomY = -strikerLimitWidth / 2;
+	const float verticalLeftX = -centerOffset;
+	const float verticalRightX = centerOffset;
+
+	if (tablePos == CarromTablePosition_Bottom)
 	{
-		pos.x = left;
+		finalPos.y = horizontalBottomY;
 	}
-	else if (pos.x > right)
+	else if (tablePos == CarromTablePosition_Left)
 	{
-		pos.x = right;
+		finalPos.x = verticalLeftX;
+	}
+	else if (tablePos == CarromTablePosition_Top)
+	{
+		finalPos.y = horizontalTopY;
+	}
+	else if (tablePos == CarromTablePosition_Right)
+	{
+		finalPos.x = verticalRightX;
 	}
 
-	b2Body_SetTransform(state->strikerBodyId, pos, b2Rot_identity);
+	if (tablePos == CarromTablePosition_Bottom || tablePos == CarromTablePosition_Top)
+	{
+		// limit x
+		if (finalPos.x < horizontalLeftX)
+		{
+			finalPos.x = horizontalLeftX;
+		}
+		if (finalPos.x > horizontalRightX)
+		{
+			finalPos.x = horizontalRightX;
+		}
+	}
+	else if (tablePos == CarromTablePosition_Left || tablePos == CarromTablePosition_Right)
+	{
+		// limit y
+		if (finalPos.y < verticalBottomY)
+		{
+			finalPos.y = verticalBottomY;
+		}
+		if (finalPos.y > verticalTopY)
+		{
+			finalPos.y = verticalTopY;
+		}
+	}
 
-	const FindNearestPuckData nearestData = CarromGameState_FindStrikerNearestPuck(state, pos);
+	return finalPos;
+}
+
+b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTablePosition tablePos, const b2Vec2 pos)
+{
+	b2Vec2 finalPos = CarromGameState_LimitStrikerPos(state, tablePos, pos);
+
+	b2Body_SetTransform(state->strikerBodyId, finalPos, b2Rot_identity);
+
+	const FindNearestPuckData nearestData = CarromGameState_FindStrikerNearestPuck(state, finalPos);
 	if (!nearestData.found)
 	{
-		return pos;
+		return finalPos;
 	}
 
 	const float puckR = state->puckPhysicsDef.radius;
@@ -449,14 +489,14 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 
 	if (nearestData.minDistance > puckR + strikerR)
 	{
-		return pos;
+		return finalPos;
 	}
 
 	// got overlap
 	const b2Circle circleStriker = {{0.0f, 0.0f}, strikerR};
 	const b2Circle circlePuck = {{0.0f, 0.0f}, puckR};
 
-	const b2Transform transformStriker = {pos, b2Rot_identity};
+	const b2Transform transformStriker = {finalPos, b2Rot_identity};
 	const b2Transform transformPuck = {nearestData.nearestPos, b2Rot_identity};
 
 	const b2Manifold m = b2CollideCircles(&circleStriker, transformStriker, &circlePuck, transformPuck);
@@ -464,48 +504,70 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 	{
 		const float pushOut = (strikerR + puckR) - nearestData.minDistance + 0.001f;
 		const float normalX = m.normal.x;
+		const float normalY = m.normal.y;
 
-		float sepX;
+		float sepX = 0.0f;
+		float sepY = 0.0f;
 		float direction;
 
-		if (normalX == 0.f)
+		if (tablePos == CarromTablePosition_Bottom || tablePos == CarromTablePosition_Top)
 		{
-			direction = 1.0f;
-		}
-		else
-		{
-			direction = normalX > 0.0f ? 1.0f : -1.0f;
-		}
+			// should move horizontally
+			if (normalX == 0.0f)
+			{
+				// force move to right
+				direction = 1.0f;
+			}
+			else
+			{
+				direction = normalX > 0.0f ? 1.0f : -1.0f;
+			}
 
-		if (pushOut < 0.00001f || b2AbsFloat(normalX) < 0.00001f)
-		{
-			sepX = direction * 0.001f;
+			if (pushOut < 0.00001f || b2AbsFloat(normalX) < 0.00001f)
+			{
+				sepX = direction * 0.001f;
+			}
+			else
+			{
+				sepX = pushOut * normalX;
+			}
 		}
 		else
 		{
-			sepX = pushOut * normalX;
+			// should move vertically
+			if (normalY == 0.0f)
+			{
+				// force move to up
+				direction = 1.0f;
+			}
+			else
+			{
+				direction = normalY > 0.0f ? 1.0f : -1.0f;
+			}
+
+			if (pushOut < 0.00001f || b2AbsFloat(normalY) < 0.00001f)
+			{
+				sepY = direction * 0.001f;
+			}
+			else
+			{
+				sepY = pushOut * normalY;
+			}
 		}
 
 		b2Vec2 after;
-		after.x = pos.x + sepX;
-		after.y = pos.y;
+		after.x = finalPos.x + sepX;
+		after.y = finalPos.y + sepY;
 
-		if (after.x < left)
-		{
-			after.x = left;
-		}
-		else if (after.x > right)
-		{
-			after.x = right;
-		}
+		after = CarromGameState_LimitStrikerPos(state, tablePos, after);
 
 		b2Body_SetTransform(state->strikerBodyId, after, b2Rot_identity);
 
 		bool reversed = false;
+		const float step = state->strikerPhysicsDef.radius / 100.0f;
 
 		while (true)
 		{
-			const float stepX = 0.001f;
 			const b2Vec2 placePos = b2Body_GetPosition(state->strikerBodyId);
 			const FindNearestPuckData data = CarromGameState_FindStrikerNearestPuck(state, placePos);
 			if (!data.found || data.minDistance > strikerR + puckR)
@@ -514,29 +576,59 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 			}
 
 			b2Vec2 newPos = placePos;
-			newPos.x += stepX * direction;
-			if (newPos.x < left)
+			if (tablePos == CarromTablePosition_Bottom || tablePos == CarromTablePosition_Top)
 			{
-				newPos.x = left;
-				if (reversed)
+				newPos.x += step * direction;
+				if (newPos.x < -state->strikerLimitDef.width / 2)
 				{
-					// printf("CarromGameState_PlaceStriker reversed\n");
-					return pos;
+					newPos.x = -state->strikerLimitDef.width / 2;
+					if (reversed)
+					{
+						return newPos;
+					}
+					direction = -direction;
+					reversed = true;
+					newPos = after;
 				}
-				direction = -direction;
-				reversed = true;
+				else if (newPos.x > state->strikerLimitDef.width / 2)
+				{
+					newPos.x = state->strikerLimitDef.width / 2;
+					if (reversed)
+					{
+						return newPos;
+					}
+					direction = -direction;
+					reversed = true;
+					newPos = after;
+				}
 			}
-			else if (newPos.x > right)
+			else if (tablePos == CarromTablePosition_Left || CarromTablePosition_Right)
 			{
-				newPos.x = right;
-				if (reversed)
+				newPos.y += step * direction;
+				if (newPos.y < -state->strikerLimitDef.width / 2)
 				{
-					// printf("CarromGameState_PlaceStriker reversed\n");
-					return pos;
+					newPos.y = -state->strikerLimitDef.width / 2;
+					if (reversed)
+					{
+						return newPos;
+					}
+					direction = -direction;
+					reversed = true;
+					newPos = after;
 				}
-				direction = -direction;
-				reversed = true;
+				else if (newPos.y > state->strikerLimitDef.width / 2)
+				{
+					newPos.y = state->strikerLimitDef.width / 2;
+					if (reversed)
+					{
+						return newPos;
+					}
+					direction = -direction;
+					reversed = true;
+					newPos = after;
+				}
 			}
+
 			b2Body_SetTransform(state->strikerBodyId, newPos, b2Rot_identity);
 		}
 	}
@@ -650,8 +742,6 @@ void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromSnapshot*
 		b2Body_SetTransform(puck->bodyId, puckSnapshot->position, b2Rot_identity);
 	}
 }
-
-#include <stdio.h>
 
 /**
  * NOTE: WE ASSUME THAT THERE ARE ONLY TWO TYPES OF MOVING OBJECTS:
@@ -829,6 +919,9 @@ void CarromGameState_Destroy(CarromGameState* state)
 		return;
 	}
 
-	b2DestroyWorld(state->worldId);
+	if (b2World_IsValid(state->worldId))
+	{
+		b2DestroyWorld(state->worldId);
+	}
 	state->worldId = b2_nullWorldId;
 }

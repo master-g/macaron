@@ -13,9 +13,9 @@ static void error(const char* msg, const char* msg1)
 	exit(1);
 }
 
-CarromPuckPhysicsDef CarromPuckPhysicsDefFromTomlTable(const toml_table_t* table)
+CarromObjectPhysicsDef CarromPuckPhysicsDefFromTomlTable(const toml_table_t* table)
 {
-	CarromPuckPhysicsDef puckPhysicsDef = {0};
+	CarromObjectPhysicsDef puckPhysicsDef = {0};
 
 	const toml_datum_t puckRadius = toml_double_in(table, "radius");
 	if (!puckRadius.ok)
@@ -132,7 +132,7 @@ CarromGameDef CarromGameDefLoadFromToml(const char* path)
 		error("missing [puck]", "");
 	}
 
-	CarromPuckPhysicsDef puckPhysicsDef = CarromPuckPhysicsDefFromTomlTable(puckPhysicsTable);
+	CarromObjectPhysicsDef puckPhysicsDef = CarromPuckPhysicsDefFromTomlTable(puckPhysicsTable);
 
 	// pocket
 	CarromPocketDef pocketDef = {0};
@@ -185,7 +185,7 @@ CarromGameDef CarromGameDefLoadFromToml(const char* path)
 		error("missing [striker]", "");
 	}
 
-	CarromPuckPhysicsDef strikerPhysicsDef = CarromPuckPhysicsDefFromTomlTable(strikerPhysicsTable);
+	CarromObjectPhysicsDef strikerPhysicsDef = CarromPuckPhysicsDefFromTomlTable(strikerPhysicsTable);
 
 	toml_free(conf);
 
