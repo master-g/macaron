@@ -136,6 +136,17 @@ MACARON_API bool CarromGameState_IsStrikerEnabled(const CarromGameState* state);
 MACARON_API b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, CarromTablePosition tablePos, b2Vec2 pos);
 
 /**
+ * @brief Place striker to the desired position
+ *
+ * this function will just simply move the striker to the desired position, without any collision detection
+ *
+ * @param state game state
+ * @param pos position of the striker
+ *
+ */
+MACARON_API void CarromGameState_PlaceStrikerUnsafe(const CarromGameState* state, b2Vec2 pos);
+
+/**
  * @brief Check if the striker is overlapping with other pucks
  *
  * @param state game state

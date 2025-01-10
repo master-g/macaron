@@ -756,6 +756,18 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 	return pos;
 }
 
+void CarromGameState_PlaceStrikerUnsafe(const CarromGameState* state, const b2Vec2 pos)
+{
+	MACARON_ASSERT(state != NULL);
+	if (state == NULL)
+	{
+		return;
+	}
+
+	const b2BodyId strikerBodyId = state->objects[IDX_STRIKER].bodyId;
+	b2Body_SetTransform(strikerBodyId, pos, b2Rot_identity);
+}
+
 bool CarromGameState_IsStrikerOverlapping(const CarromGameState* state, const b2Vec2 pos)
 {
 	MACARON_ASSERT(state != NULL);
