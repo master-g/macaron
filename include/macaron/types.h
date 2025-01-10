@@ -78,10 +78,10 @@ typedef struct CarromPocketDef
 	// pocket radius
 	float radius;
 
-	// horizontal offset from center
+	// horizontal offset from corner
 	float cornerOffsetX;
 
-	// vertical offset from center
+	// vertical offset from corner
 	float cornerOffsetY;
 
 } CarromPocketDef;
