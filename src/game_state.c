@@ -836,7 +836,7 @@ CarromFrame CarromGameState_TakeSnapshot(const CarromGameState* state)
 		const CarromObject* obj = &state->objects[i];
 		if (!B2_ID_EQUALS(b2_nullBodyId, obj->bodyId))
 		{
-			frame.snapshots[i].index = i;
+			frame.snapshots[i].index = (int8_t) i;
 			frame.snapshots[i].enable = b2Body_IsEnabled(obj->bodyId);
 			frame.snapshots[i].position = b2Body_GetPosition(obj->bodyId);
 		}
@@ -902,7 +902,7 @@ void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromFrame* fr
  * @param frame Output frame
  * @param pucksHitPocket number of pucks hit pocket
  */
-void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* frame, int32_t* pucksHitPocket)
+void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* frame, int8_t* pucksHitPocket)
 {
 	// striker body id
 	const b2BodyId strikerBodyId = state->objects[IDX_STRIKER].bodyId;
@@ -914,7 +914,7 @@ void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* 
 		const b2BodyId objectBodyId = state->objects[i].bodyId;
 		if (!B2_ID_EQUALS(objectBodyId, b2_nullBodyId))
 		{
-			snapshot->index = i;
+			snapshot->index = (int8_t)i;
 			snapshot->enable = b2Body_IsEnabled(objectBodyId);
 			snapshot->position = b2Body_GetPosition(objectBodyId);
 			snapshot->hitEvent = CarromHitEventType_None;
@@ -1093,7 +1093,7 @@ CarromEvalResult CarromGameState_Eval(const CarromGameState* state, const int ma
 		CarromGameState_DumpSingleFrame(state, frame, &frame->pucksHitPocket);
 
 		result.strikerHitPocket |= frame->strikerHitPocket;
-		result.pucksHitPocket += frame->pucksHitPocket;
+		result.pucksHitPocket = (int8_t)(result.pucksHitPocket + frame->pucksHitPocket);
 
 		result.numFrames++;
 

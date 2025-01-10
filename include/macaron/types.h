@@ -5,7 +5,7 @@
 // 0: striker, 1-9: black pucks, 11-19: white pucks, 21: red puck
 #define NUM_OF_OBJECTS 22
 #define MAX_POCKET_CAPACITY 4
-#define MAX_FRAME_CAPACITY 512
+#define MAX_FRAME_CAPACITY 1024
 
 #define IDX_WALL (-1)
 
@@ -218,7 +218,7 @@ typedef enum CarromHitEventType
 typedef struct CarromObjectSnapshot
 {
 	// object index
-	int32_t index;
+	int8_t index;
 	// object position
 	b2Vec2 position;
 	// enable, object will be disabled if it hits the pocket
@@ -230,7 +230,7 @@ typedef struct CarromObjectSnapshot
 	// just hit pocket
 	bool hitPocket;
 	// hit pocket index
-	int32_t hitPocketIndex;
+	int8_t hitPocketIndex;
 
 } CarromObjectSnapshot;
 
@@ -238,11 +238,11 @@ typedef struct CarromObjectSnapshot
 typedef struct CarromFrame
 {
 	// frame index
-	int32_t index;
+	int16_t index;
 	// striker hits the pocket
 	bool strikerHitPocket;
 	// number of pucks hit the pocket
-	int32_t pucksHitPocket;
+	int8_t pucksHitPocket;
 	// object snapshots
 	CarromObjectSnapshot snapshots[NUM_OF_OBJECTS];
 
@@ -254,9 +254,9 @@ typedef struct CarromEvalResult
 	// striker hit the pocket
 	bool strikerHitPocket;
 	// number of pucks hit the pocket
-	int32_t pucksHitPocket;
+	int8_t pucksHitPocket;
 	// number of frames
-	int32_t numFrames;
+	int16_t numFrames;
 	// frames
 	CarromFrame frames[MAX_FRAME_CAPACITY];
 

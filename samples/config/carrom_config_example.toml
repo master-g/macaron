@@ -1,33 +1,33 @@
 [world]
-width = 8.81
-height = 8.81
+width = 29.8
+height = 29.8
 workerCount = 4
 subStep = 4
 disableSleep = false
-frameDuration = 0.016666
+frameDuration = 0.033333
 
 [puck]
-radius = 0.16
+radius = 0.975
 gap = 0.0001
-bodyLinearDamping = 1.8
-bodyAngularDamping = 2.0
+bodyLinearDamping = 0.3
+bodyAngularDamping = 0.0
 shapeFriction = 0.0
-shapeRestitution = 1.0
-shapeDensity = 0.45
+shapeRestitution = 0.85
+shapeDensity = 2.0
 
 [pocket]
-radius = 0.22
+radius = 1.05
 cornerOffsetX = 0.0
 cornerOffsetY = 0.0
 
 [striker_limit]
-width = 5.0
-centerOffset = 3.5
+width = 0.0
+centerOffset = 0.0
 
 [striker]
-radius = 0.2176
-bodyLinearDamping = 2.8
-bodyAngularDamping = 5.0
+radius = 1.275
+bodyLinearDamping = 0.3
+bodyAngularDamping = 0.0
 shapeFriction = 0.0
-shapeRestitution = 1.0
-shapeDensity = 0.5
+shapeRestitution = 0.85
+shapeDensity = 2.0

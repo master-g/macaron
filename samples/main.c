@@ -348,13 +348,21 @@ void sample_apply_velocity()
 	system("rm -r output");
 	system("mkdir -p output");
 
+	CarromEvalResult r = {0};
+	const int bytes = sizeof(r);
+	const float kib = bytes / 1024.0f;
+	const float mib = kib / 1024.0f;
+	printf("size: %d bytes, %.3f KiB, %.3f MiB\n", bytes, kib, mib);
+
 	const CarromGameDef def = load_game_def();
 	const CarromGameState state = new_game_state(&def);
 
-	CarromGameState_PlaceStriker(&state, CarromTablePosition_Bottom, b2Vec2_zero);
+	b2Vec2 pos = b2Vec2_zero;
+	pos.y = -def.worldDef.height / 2 + def.strikerPhysicsDef.radius * 2;
+	CarromGameState_PlaceStrikerUnsafe(&state, pos);
 
 	b2Vec2 velocity = b2Vec2_zero;
-	velocity.y = 30.0f;
+	velocity.y = 60.0f;
 
 	CarromGameState_ApplyVelocityToStriker(&state, velocity);
 
