@@ -224,16 +224,16 @@ CarromGameState CarromGameState_New(const CarromGameDef* def)
 }
 
 MACARON_API void CarromGameState_SetPuckPosition(const CarromGameState* state, const int size,
-                                                            const CarromObjectPositionDef* positions)
+                                                 const CarromObjectPositionDef* positions)
 {
 	MACARON_ASSERT(state != NULL);
 	MACARON_ASSERT(size > 0 && size <= PUCK_IDX_COUNT);
 	MACARON_ASSERT(positions != NULL);
 
 	if (state == NULL || size <= 0 || size > PUCK_IDX_COUNT || positions == NULL)
-    {
+	{
 		return;
-    }
+	}
 
 	for (int i = 0; i < size; i++)
 	{
@@ -495,6 +495,11 @@ b2Vec2 CarromGameState_LimitStrikerPos(const CarromGameState* state, const Carro
 	const float strikerLimitWidth = state->strikerLimitDef.width;
 	const float centerOffset = state->strikerLimitDef.centerOffset;
 
+	if (strikerLimitWidth == 0.0f || centerOffset == 0.0f)
+	{
+		return finalPos;
+	}
+
 	const float horizontalLeftX = -strikerLimitWidth / 2;
 	const float horizontalRightX = strikerLimitWidth / 2;
 	const float horizontalTopY = centerOffset;
@@ -674,6 +679,13 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 		bool reversed = false;
 		const float step = state->strikerPhysicsDef.radius / 100.0f;
 
+		const float maxHorizontalRange = state->strikerLimitDef.width > 0.0f
+			                                 ? state->strikerLimitDef.width / 2
+			                                 : state->worldDef.width / 2;
+		const float maxVerticalRange = state->strikerLimitDef.width > 0.0f
+			                               ? state->strikerLimitDef.width / 2
+			                               : state->worldDef.height / 2;
+
 		while (true)
 		{
 			const b2Vec2 placePos = b2Body_GetPosition(strikerBodyId);
@@ -687,9 +699,9 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 			if (tablePos == CarromTablePosition_Bottom || tablePos == CarromTablePosition_Top)
 			{
 				newPos.x += step * direction;
-				if (newPos.x < -state->strikerLimitDef.width / 2)
+				if (newPos.x < -maxHorizontalRange)
 				{
-					newPos.x = -state->strikerLimitDef.width / 2;
+					newPos.x = -maxHorizontalRange;
 					if (reversed)
 					{
 						return newPos;
@@ -698,9 +710,9 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 					reversed = true;
 					newPos = after;
 				}
-				else if (newPos.x > state->strikerLimitDef.width / 2)
+				else if (newPos.x > maxHorizontalRange)
 				{
-					newPos.x = state->strikerLimitDef.width / 2;
+					newPos.x = maxHorizontalRange;
 					if (reversed)
 					{
 						return newPos;
@@ -713,9 +725,9 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 			else if (tablePos == CarromTablePosition_Left || CarromTablePosition_Right)
 			{
 				newPos.y += step * direction;
-				if (newPos.y < -state->strikerLimitDef.width / 2)
+				if (newPos.y < -maxVerticalRange)
 				{
-					newPos.y = -state->strikerLimitDef.width / 2;
+					newPos.y = -maxVerticalRange;
 					if (reversed)
 					{
 						return newPos;
@@ -724,9 +736,9 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 					reversed = true;
 					newPos = after;
 				}
-				else if (newPos.y > state->strikerLimitDef.width / 2)
+				else if (newPos.y > maxVerticalRange)
 				{
-					newPos.y = state->strikerLimitDef.width / 2;
+					newPos.y = maxVerticalRange;
 					if (reversed)
 					{
 						return newPos;
@@ -765,7 +777,7 @@ bool CarromGameState_IsStrikerOverlapping(const CarromGameState* state, const b2
 	return false;
 }
 
-void CarromGameState_Strike(const CarromGameState* state, b2Vec2 impulse)
+void CarromGameState_Strike(const CarromGameState* state, b2Vec2 impulse, const float maxForce)
 {
 	MACARON_ASSERT(state != NULL);
 	if (state == NULL)
@@ -776,9 +788,9 @@ void CarromGameState_Strike(const CarromGameState* state, b2Vec2 impulse)
 	const b2BodyId strikerBodyId = state->objects[IDX_STRIKER].bodyId;
 
 	const float force = b2Length(impulse);
-	if (force > state->strikerLimitDef.maxForce)
+	if (maxForce > 0.0f && force > maxForce)
 	{
-		const float scale = state->strikerLimitDef.maxForce / force;
+		const float scale = maxForce / force;
 		impulse = b2MulSV(scale, impulse);
 	}
 	if (!b2Body_IsEnabled(strikerBodyId))
@@ -786,6 +798,19 @@ void CarromGameState_Strike(const CarromGameState* state, b2Vec2 impulse)
 		b2Body_Enable(strikerBodyId);
 	}
 	b2Body_ApplyForceToCenter(strikerBodyId, impulse, true);
+}
+
+void CarromGameState_ApplyVelocityToStriker(const CarromGameState* state, const b2Vec2 velocity)
+{
+	MACARON_ASSERT(state != NULL);
+	if (state == NULL)
+	{
+		return;
+	}
+
+	const b2BodyId strikerBodyId = state->objects[IDX_STRIKER].bodyId;
+	b2Body_Enable(strikerBodyId);
+	b2Body_SetLinearVelocity(strikerBodyId, velocity);
 }
 
 CarromFrame CarromGameState_TakeSnapshot(const CarromGameState* state)

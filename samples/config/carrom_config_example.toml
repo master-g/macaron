@@ -23,7 +23,6 @@ cornerOffsetY = 0.0
 [striker_limit]
 width = 5.0
 centerOffset = 3.5
-maxForce = 150.0
 
 [striker]
 radius = 0.2176

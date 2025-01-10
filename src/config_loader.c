@@ -181,13 +181,6 @@ CarromGameDef CarromGameDefLoadFromToml(const char* path)
 	}
 	strikerLimits.centerOffset = (float)strikerCenterOffset.u.d;
 
-	const toml_datum_t strikerMaxForce = toml_double_in(strikerLimitTable, "maxForce");
-	if (!strikerMaxForce.ok)
-	{
-		error("cannot read striker_limit.maxForce", "");
-	}
-	strikerLimits.maxForce = (float)strikerMaxForce.u.d;
-
 	// striker physics def
 	toml_table_t* strikerPhysicsTable = toml_table_in(conf, "striker");
 	if (!strikerPhysicsTable)

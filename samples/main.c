@@ -109,7 +109,7 @@ void sample_strike()
 
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, b2Vec2_zero);
 	const b2Vec2 impulse = {0.0f, -150.0f};
-	CarromGameState_Strike(&state, impulse);
+	CarromGameState_Strike(&state, impulse, 0.0f);
 
 	const int steps = 1024;
 	for (int i = 0; i < steps; i++)
@@ -145,7 +145,7 @@ void sample_take_snapshot()
 
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, b2Vec2_zero);
 	const b2Vec2 impulse = {0.0f, -150.0f};
-	CarromGameState_Strike(&state, impulse);
+	CarromGameState_Strike(&state, impulse, 0.0f);
 
 	const int steps = 1024;
 	for (int i = 0; i < steps; i++)
@@ -221,7 +221,7 @@ b2Vec2 find_pocket_impulse(const CarromTablePosition tablePos, const int numOfGo
 		const CarromGameState state = new_game_state(&def);
 		// strike!
 		CarromGameState_PlaceStriker(&state, tablePos, b2Vec2_zero);
-		CarromGameState_Strike(&state, impulse);
+		CarromGameState_Strike(&state, impulse, 0.0f);
 
 		// eval
 		const CarromEvalResult result = CarromGameState_Eval(&state, 0);
@@ -243,7 +243,7 @@ void sample_eval()
 
 	// strike!
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, b2Vec2_zero);
-	CarromGameState_Strike(&state, impulse);
+	CarromGameState_Strike(&state, impulse, 0.0f);
 
 	// eval
 	const CarromEvalResult result = CarromGameState_Eval(&state, 0);
@@ -272,7 +272,7 @@ b2Vec2 sample_eval_any(const CarromTablePosition tablePos)
 
 	// strike!
 	CarromGameState_PlaceStriker(&state, tablePos, b2Vec2_zero);
-	CarromGameState_Strike(&state, impulse);
+	CarromGameState_Strike(&state, impulse, 0.0f);
 
 	// dump
 	CarromEvalResultViewer viewer = CarromEvalResultViewerCreate(&state);
@@ -319,7 +319,7 @@ void sample_eval_with_picture_output()
 
 	// strike!
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Bottom, b2Vec2_zero);
-	CarromGameState_Strike(&state, impulse);
+	CarromGameState_Strike(&state, impulse, 0.0f);
 
 	CarromEvalResultViewer viewer = CarromEvalResultViewerCreate(&state);
 
@@ -343,14 +343,51 @@ void sample_eval_with_picture_output()
 	system("magick -delay 2 -loop 0 output/*.png output.gif");
 }
 
+void sample_apply_velocity()
+{
+	system("rm -r output");
+	system("mkdir -p output");
+
+	const CarromGameDef def = load_game_def();
+	const CarromGameState state = new_game_state(&def);
+
+	CarromGameState_PlaceStriker(&state, CarromTablePosition_Bottom, b2Vec2_zero);
+
+	b2Vec2 velocity = b2Vec2_zero;
+	velocity.y = 30.0f;
+
+	CarromGameState_ApplyVelocityToStriker(&state, velocity);
+
+	CarromEvalResultViewer viewer = CarromEvalResultViewerCreate(&state);
+
+	const CarromEvalResult result = CarromGameState_Eval(&state, 0);
+	printf("frame count: %d\n", result.numFrames);
+
+	// dump
+	dump_viewer_to_png(&viewer, "output/viewer_000.png");
+
+	for (int i = 0; i < result.numFrames; i++)
+	{
+		const CarromFrame* frame = &result.frames[i];
+		CarromEvalResultViewer_Update(&viewer, frame);
+
+		char buf[256];
+		snprintf(buf, sizeof(buf), "output/viewer_%03d.png", i+1);
+		dump_viewer_to_png(&viewer, buf);
+	}
+
+	system("magick -delay 2 -loop 0 output/*.png output.gif");
+}
+
 int main(int argc, char** argv)
 {
-	sample_take_snapshot();
+	// sample_take_snapshot();
 	// sample_userdata();
 	// sample_eval();
 	// sample_eval_with_picture_output();
 	// sample_place_striker();
 	// sample_eval_any(CarromTablePosition_Left);
+	sample_apply_velocity();
 
 	return 0;
 }

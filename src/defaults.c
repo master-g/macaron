@@ -56,7 +56,6 @@ CarromStrikerLimitDef CarromDefaultStrikerLimitDef(void)
 	CarromStrikerLimitDef def = {0};
 	def.width = 8.0f;
 	def.centerOffset = 4.0f;
-	def.maxForce = 150.0f;
 	return def;
 }
 

@@ -150,8 +150,17 @@ MACARON_API bool CarromGameState_IsStrikerOverlapping(const CarromGameState* sta
  *
  * @param state game state
  * @param impulse force and direction
+ * @param maxForce maximum force allowed, 0 means no limit
  */
-MACARON_API void CarromGameState_Strike(const CarromGameState* state, b2Vec2 impulse);
+MACARON_API void CarromGameState_Strike(const CarromGameState* state, b2Vec2 impulse, float maxForce);
+
+/**
+ * @brief Apply velocity to the striker
+ *
+ * @param state game state
+ * @param velocity velocity
+ */
+MACARON_API void CarromGameState_ApplyVelocityToStriker(const CarromGameState* state, b2Vec2 velocity);
 
 /**
  * @brief Take snapshot of the game state

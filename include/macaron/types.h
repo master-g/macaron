@@ -146,8 +146,6 @@ typedef struct CarromStrikerLimitDef
 	float width;
 	// vertical offset from center
 	float centerOffset;
-	// maximum force when strike
-	float maxForce;
 
 } CarromStrikerLimitDef;
 
