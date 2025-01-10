@@ -187,7 +187,7 @@ void sample_take_snapshot()
 	dump_game_state_to_png(&newState2, "sample_take_snapshot_3.png");
 }
 
-b2Vec2 find_pocket_impulse(CarromTablePosition tablePos)
+b2Vec2 find_pocket_impulse(const CarromTablePosition tablePos, int numOfGoals)
 {
 	b2Vec2 initialImpulse = b2Vec2_zero;
 	if (tablePos == CarromTablePosition_Top)
@@ -225,7 +225,7 @@ b2Vec2 find_pocket_impulse(CarromTablePosition tablePos)
 
 		// eval
 		const CarromEvalResult result = CarromGameState_Eval(&state, 0);
-		if (!result.strikerHitPocket && result.pucksHitPocket > 0)
+		if (!result.strikerHitPocket && result.pucksHitPocket >= numOfGoals)
 		{
 			return impulse;
 		}
@@ -258,13 +258,13 @@ void sample_eval()
 
 b2Vec2 sample_eval_any(const CarromTablePosition tablePos)
 {
-	const b2Vec2 impulse = find_pocket_impulse(tablePos);
-	printf("impulse found: (%.3f, %.3f)\n", impulse.x, impulse.y);
+	// const b2Vec2 impulse = find_pocket_impulse(tablePos);
+	// printf("impulse found: (%.3f, %.3f)\n", impulse.x, impulse.y);
 
 	system("rm -r output");
 	system("mkdir -p output");
 
-	// const b2Vec2 impulse = {-28.621f, -148.244f};
+	const b2Vec2 impulse = {-148.540f, 20.876f};
 
 	// new state
 	const CarromGameDef def = load_game_def();
@@ -280,7 +280,8 @@ b2Vec2 sample_eval_any(const CarromTablePosition tablePos)
 
 	// eval
 	const CarromEvalResult result = CarromGameState_Eval(&state, 0);
-	printf("frame count: %d\n", result.numFrames);
+	printf("frame count: %d, pucksHitPocket: %d, strikerHitPocket: %d\n", result.numFrames, result.pucksHitPocket,
+	       result.strikerHitPocket);
 
 	for (int i = 0; i < result.numFrames; i++)
 	{
@@ -298,24 +299,26 @@ b2Vec2 sample_eval_any(const CarromTablePosition tablePos)
 	}
 
 	system("magick -delay 2 -loop 0 output/*.png output.gif");
+
+	return impulse;
 }
 
 void sample_eval_with_picture_output()
 {
-	// b2Vec2 impulse = find_pocket_impulse();
-	// printf("impulse found: (%.3f, %.3f)\n", impulse.x, impulse.y);
+	b2Vec2 impulse = find_pocket_impulse(CarromTablePosition_Bottom, 2);
+	printf("impulse found: (%.3f, %.3f)\n", impulse.x, impulse.y);
 
 	system("rm -r output");
 	system("mkdir -p output");
 
-	const b2Vec2 impulse = {-28.621f, -148.244f};
+	// const b2Vec2 impulse = {-28.621f, -148.244f};
 
 	// new state
 	const CarromGameDef def = load_game_def();
 	const CarromGameState state = new_game_state(&def);
 
 	// strike!
-	CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, b2Vec2_zero);
+	CarromGameState_PlaceStriker(&state, CarromTablePosition_Bottom, b2Vec2_zero);
 	CarromGameState_Strike(&state, impulse);
 
 	CarromEvalResultViewer viewer = CarromEvalResultViewerCreate(&state);
@@ -345,9 +348,9 @@ int main(int argc, char** argv)
 	// sample_take_snapshot();
 	// sample_userdata();
 	// sample_eval();
-	// sample_eval_with_picture_output();
+	sample_eval_with_picture_output();
 	// sample_place_striker();
-	sample_eval_any(CarromTablePosition_Left);
+	// sample_eval_any(CarromTablePosition_Left);
 
 	return 0;
 }

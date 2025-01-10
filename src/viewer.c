@@ -18,11 +18,13 @@ CarromEvalResultViewer CarromEvalResultViewerCreate(const CarromGameState* state
 		{
 			viewer.enables[i] = false;
 			viewer.positions[i] = b2Vec2_zero;
+			viewer.rest[i] = false;
 		}
 		else
 		{
 			viewer.enables[i] = b2Body_IsEnabled(obj->bodyId);
 			viewer.positions[i] = b2Body_GetPosition(obj->bodyId);
+			viewer.rest[i] = false;
 		}
 	}
 
@@ -60,6 +62,7 @@ void CarromEvalResultViewer_Update(CarromEvalResultViewer* viewer, const CarromF
 		{
 			viewer->enables[snapshot->index] = snapshot->enable;
 			viewer->positions[snapshot->index] = snapshot->position;
+			viewer->rest[snapshot->index] = snapshot->rest;
 		}
 	}
 }

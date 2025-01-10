@@ -6,6 +6,7 @@ typedef struct CarromEvalResultViewer
 {
 	bool enables[NUM_OF_OBJECTS];
 	b2Vec2 positions[NUM_OF_OBJECTS];
+	bool rest[NUM_OF_OBJECTS];
 
 	float radius[CarromObjectType_Count];
 

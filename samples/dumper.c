@@ -126,10 +126,18 @@ void dump_viewer_to_png(const CarromEvalResultViewer* viewer, const char* file_p
 		}
 		const b2Vec2 pos = viewer->positions[idx];
 		const CarromPuckColor color = MACARON_IDX_PUCK_COLOR(idx);
+
 		const int x = (int)(pos.x * scaleX + IMG_WIDTH / 2.f);
 		const int y = (int)(IMG_HEIGHT / 2.f - pos.y * scaleY);
 
-		olivec_circle(oc, x, y, puckR, puckColors[color]);
+		uint32_t argb = puckColors[color];
+		if (viewer->rest[idx])
+		{
+			argb &= 0x00FFFFFF;
+			argb |= 0xA0000000;
+		}
+
+		olivec_circle(oc, x, y, puckR, argb);
 	}
 
 	// striker

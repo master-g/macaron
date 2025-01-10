@@ -242,6 +242,8 @@ typedef struct CarromObjectSnapshot
 	b2Vec2 position;
 	// enable, object will be disabled if it hits the pocket
 	bool enable;
+	// has movement
+	bool rest;
 	// hit event
 	CarromHitEventType hitEvent;
 	// just hit pocket

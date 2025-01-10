@@ -854,6 +854,9 @@ void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* 
 			snapshot->enable = b2Body_IsEnabled(objectBodyId);
 			snapshot->position = b2Body_GetPosition(objectBodyId);
 			snapshot->hitEvent = CarromHitEventType_None;
+
+			// first frame, all objects are considered as moving
+			snapshot->rest = frame->index != 0;
 		}
 		else
 		{
@@ -999,6 +1002,7 @@ void CarromGameState_DumpSingleFrame(const CarromGameState* state, CarromFrame* 
 			if (idx >= 0 && idx < NUM_OF_OBJECTS)
 			{
 				frame->snapshots[idx].position = bodyMoveEvent->transform.p;
+				frame->snapshots[idx].rest = false;
 			}
 		}
 	}
