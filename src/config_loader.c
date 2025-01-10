@@ -148,6 +148,16 @@ CarromGameDef CarromGameDefLoadFromToml(const char* path)
 		error("cannot read pocket.radius", "");
 	}
 	pocketDef.radius = (float)pocketRadius.u.d;
+	const toml_datum_t pocketCornerOffsetX = toml_double_in(pocketTable, "cornerOffsetX");
+	if (pocketCornerOffsetX.ok)
+	{
+		pocketDef.cornerOffsetX = (float)pocketCornerOffsetX.u.d;
+	}
+	const toml_datum_t pocketCornerOffsetY = toml_double_in(pocketTable, "cornerOffsetY");
+	if (pocketCornerOffsetY.ok)
+    {
+        pocketDef.cornerOffsetY = (float)pocketCornerOffsetY.u.d;
+    }
 
 	// striker limit
 	CarromStrikerLimitDef strikerLimits = {0};
@@ -195,9 +205,6 @@ CarromGameDef CarromGameDefLoadFromToml(const char* path)
 	def.pocketDef = pocketDef;
 	def.strikerLimitDef = strikerLimits;
 	def.strikerPhysicsDef = strikerPhysicsDef;
-
-	CarromGameDef_PlacePucks(&def);
-	CarromGameDef_PlacePockets(&def);
 
 	return def;
 }

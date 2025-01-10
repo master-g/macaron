@@ -12,14 +12,14 @@ CarromGameDef load_game_def()
 
 CarromGameState new_game_state(const CarromGameDef* gameDef)
 {
-	// for (int i = 0; i < gameDef.numOfPucks; i++)
-	// {
-	// 	const CarromPuckPositionDef posDef = gameDef.pucksPositions[i];
-	// 	printf("idx: %d, color: %d, pos: (%.3f, %.3f)\n", posDef.index, posDef.color, posDef.position.x, posDef.position.y);
-	// }
 	const CarromGameState state = CarromGameState_New(gameDef);
 
-	for (int i = 0; i < 8; i++)
+	CarromObjectPositionDef puckPosArr[PUCK_IDX_COUNT];
+	CarromDefaultPuckPosition(gameDef->puckPhysicsDef.radius, gameDef->puckPhysicsDef.gap, PUCK_IDX_COUNT, puckPosArr);
+
+	CarromGameState_SetPuckPosition(&state, PUCK_IDX_COUNT, puckPosArr);
+
+	for (int i = 0; i < 16; i++)
 	{
 		CarromGameState_Step(&state);
 	}
@@ -187,7 +187,7 @@ void sample_take_snapshot()
 	dump_game_state_to_png(&newState2, "sample_take_snapshot_3.png");
 }
 
-b2Vec2 find_pocket_impulse(const CarromTablePosition tablePos, int numOfGoals)
+b2Vec2 find_pocket_impulse(const CarromTablePosition tablePos, const int numOfGoals)
 {
 	b2Vec2 initialImpulse = b2Vec2_zero;
 	if (tablePos == CarromTablePosition_Top)
@@ -305,7 +305,7 @@ b2Vec2 sample_eval_any(const CarromTablePosition tablePos)
 
 void sample_eval_with_picture_output()
 {
-	b2Vec2 impulse = find_pocket_impulse(CarromTablePosition_Bottom, 2);
+	const b2Vec2 impulse = find_pocket_impulse(CarromTablePosition_Bottom, 2);
 	printf("impulse found: (%.3f, %.3f)\n", impulse.x, impulse.y);
 
 	system("rm -r output");
@@ -345,10 +345,10 @@ void sample_eval_with_picture_output()
 
 int main(int argc, char** argv)
 {
-	// sample_take_snapshot();
+	sample_take_snapshot();
 	// sample_userdata();
 	// sample_eval();
-	sample_eval_with_picture_output();
+	// sample_eval_with_picture_output();
 	// sample_place_striker();
 	// sample_eval_any(CarromTablePosition_Left);
 

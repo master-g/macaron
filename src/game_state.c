@@ -61,11 +61,7 @@ void CarromGameState_CreateImpl(CarromGameState* state,
                                 const CarromPocketDef* pocketDef,
                                 const CarromObjectPhysicsDef* puckPhysicsDef,
                                 const CarromObjectPhysicsDef* strikerPhysicsDef,
-                                const CarromStrikerLimitDef* strikerLimitDef,
-                                int numOfPosDefs,
-                                const CarromObjectPositionDef* pucksPositions,
-                                int numOfPockets,
-                                const CarromObjectPositionDef* pocketsPositions)
+                                const CarromStrikerLimitDef* strikerLimitDef)
 {
 	MACARON_ASSERT(state != NULL);
 	MACARON_ASSERT(def != NULL);
@@ -73,12 +69,13 @@ void CarromGameState_CreateImpl(CarromGameState* state,
 	MACARON_ASSERT(puckPhysicsDef != NULL);
 	MACARON_ASSERT(strikerPhysicsDef != NULL);
 	MACARON_ASSERT(strikerLimitDef != NULL);
-	MACARON_ASSERT(pucksPositions != NULL);
-	MACARON_ASSERT(pocketsPositions != NULL);
-	MACARON_ASSERT(numOfPockets > 0);
 
-	if (state == NULL || def == NULL || pocketDef == NULL || puckPhysicsDef == NULL || strikerPhysicsDef == NULL ||
-	    strikerLimitDef == NULL || pucksPositions == NULL || pocketsPositions == NULL
+	if (state == NULL
+	    || def == NULL
+	    || pocketDef == NULL
+	    || puckPhysicsDef == NULL
+	    || strikerPhysicsDef == NULL
+	    || strikerLimitDef == NULL
 	)
 	{
 		return;
@@ -134,36 +131,48 @@ void CarromGameState_CreateImpl(CarromGameState* state,
 	}
 
 	// pucks
-	{
-		state->numOfPosDefs = numOfPosDefs;
+	CarromObject nullObj = {0};
+	nullObj.index = -1;
+	nullObj.bodyId = b2_nullBodyId;
 
-		for (int i = 0; i < numOfPosDefs; i++)
+	for (int i = 0; i < NUM_OF_OBJECTS; i++)
+	{
+		if (MACARON_IS_VALID_PUCK_IDX(i))
 		{
 			CarromObject puck = CarromPuck_New(state->worldId, puckPhysicsDef);
-			const CarromObjectPositionDef posDef = pucksPositions[i];
-			puck.index = posDef.index;
+			puck.index = i;
+			state->objects[i] = puck;
 
-			MACARON_ASSERT(MACARON_IS_VALID_PUCK_IDX(puck.index));
-
-			b2Body_SetTransform(puck.bodyId, posDef.position, b2Rot_identity);
-			state->objects[puck.index] = puck;
-			state->objectPositionDefs[i] = posDef;
-
+			b2Body_SetTransform(puck.bodyId, b2Vec2_zero, b2Rot_identity);
 			b2Body_SetUserData(puck.bodyId, (void*)(intptr_t)puck.index);
+			b2Body_Disable(puck.bodyId);
+		}
+		else
+		{
+			state->objects[i] = nullObj;
 		}
 	}
 
 	// pockets
 	{
-		state->numOfPockets = numOfPockets;
-		for (int i = 0; i < numOfPockets; i++)
+		const float left = -def->width / 2 + pocketDef->cornerOffsetX;
+		const float right = def->width / 2 - pocketDef->cornerOffsetX;
+		const float top = def->height / 2 - pocketDef->cornerOffsetY;
+		const float bottom = -def->height / 2 + pocketDef->cornerOffsetY;
+
+		const b2Vec2 pocketsPositions[MAX_POCKET_CAPACITY] = {
+			{left, top},
+			{right, top},
+			{right, bottom},
+			{left, bottom},
+		};
+
+		for (int i = 0; i < MAX_POCKET_CAPACITY; i++)
 		{
-			const CarromObjectPositionDef posDef = pocketsPositions[i];
-			const b2Circle circle = {posDef.position, pocketDef->radius};
+			const b2Circle circle = {pocketsPositions[i], pocketDef->radius};
 			b2ShapeDef shapeDef = b2DefaultShapeDef();
 			shapeDef.isSensor = true;
 			state->pockets[i] = b2CreateCircleShape(state->wallBodyId, &shapeDef, &circle);
-			state->pocketsPositionDefs[i] = posDef;
 		}
 	}
 
@@ -209,13 +218,35 @@ CarromGameState CarromGameState_New(const CarromGameDef* def)
 	                           &def->pocketDef,
 	                           &def->puckPhysicsDef,
 	                           &def->strikerPhysicsDef,
-	                           &def->strikerLimitDef,
-	                           def->numOfPucks,
-	                           def->pucksPositions,
-	                           def->numOfPockets,
-	                           def->pocketsPositions);
+	                           &def->strikerLimitDef);
 
 	return state;
+}
+
+MACARON_API void CarromGameState_SetPuckPosition(const CarromGameState* state, const int size,
+                                                            const CarromObjectPositionDef* positions)
+{
+	MACARON_ASSERT(state != NULL);
+	MACARON_ASSERT(size > 0 && size <= PUCK_IDX_COUNT);
+	MACARON_ASSERT(positions != NULL);
+
+	if (state == NULL || size <= 0 || size > PUCK_IDX_COUNT || positions == NULL)
+    {
+		return;
+    }
+
+	for (int i = 0; i < size; i++)
+	{
+		const CarromObjectPositionDef posDef = positions[i];
+		if (!MACARON_IS_VALID_PUCK_IDX(posDef.index))
+		{
+			continue;
+		}
+
+		const CarromObject* puck = &state->objects[posDef.index];
+		b2Body_SetTransform(puck->bodyId, posDef.position, b2Rot_identity);
+		b2Body_Enable(puck->bodyId);
+	}
 }
 
 bool CarromGameState_HasMovement(const CarromGameState* state)
@@ -794,11 +825,7 @@ void CarromGameState_ApplySnapshot(CarromGameState* state, const CarromFrame* fr
 		                           &state->pocketDef,
 		                           &state->puckPhysicsDef,
 		                           &state->strikerPhysicsDef,
-		                           &state->strikerLimitDef,
-		                           state->numOfPosDefs,
-		                           state->objectPositionDefs,
-		                           state->numOfPockets,
-		                           state->pocketsPositionDefs
+		                           &state->strikerLimitDef
 			);
 	}
 

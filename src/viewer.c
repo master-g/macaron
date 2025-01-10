@@ -28,12 +28,6 @@ CarromEvalResultViewer CarromEvalResultViewerCreate(const CarromGameState* state
 		}
 	}
 
-	for (int i = 0; i < state->numOfPockets; i++)
-	{
-		viewer.pocketsPosition[i] = state->pocketsPositionDefs[i].position;
-	}
-	viewer.numOfPockets = state->numOfPockets;
-
 	viewer.worldWidth = state->worldDef.width;
 	viewer.worldHeight = state->worldDef.height;
 	viewer.strikerLimitWidth = state->strikerLimitDef.width;
@@ -42,6 +36,11 @@ CarromEvalResultViewer CarromEvalResultViewerCreate(const CarromGameState* state
 	viewer.radius[CarromObjectType_Puck] = state->puckPhysicsDef.radius;
 	viewer.radius[CarromObjectType_Striker] = state->strikerPhysicsDef.radius;
 	viewer.radius[CarromObjectType_Pocket] = state->pocketDef.radius;
+
+	for (int i = 0; i < MAX_POCKET_CAPACITY; i++)
+	{
+		viewer.pocketsPosition[i] = b2Shape_GetCircle(state->pockets[i]).center;
+	}
 
 	return viewer;
 }

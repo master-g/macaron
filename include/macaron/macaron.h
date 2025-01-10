@@ -20,6 +20,16 @@ MACARON_API CarromGameDef CarromGameDefLoadFromToml(const char* path);
 MACARON_API CarromGameState CarromGameState_New(const CarromGameDef* def);
 
 /**
+ * @brief Set puck position
+ *
+ * @param state game state
+ * @param size number of pucks
+ * @param positions puck positions
+ */
+MACARON_API void CarromGameState_SetPuckPosition(const CarromGameState* state, int size,
+                                                 const CarromObjectPositionDef* positions);
+
+/**
  * @brief Check if the game state has movement
  *
  * @param state game state

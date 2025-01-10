@@ -40,7 +40,7 @@ void dump_game_state_to_png(const CarromGameState* state, const char* file_path)
 	draw_limiter(&oc, state->strikerLimitDef.width, state->strikerLimitDef.centerOffset, scaleX, scaleY);
 
 	// pockets
-	for (int i = 0; i < state->numOfPockets; i++)
+	for (int i = 0; i < MAX_POCKET_CAPACITY; i++)
 	{
 		const b2ShapeId shapeId = state->pockets[i];
 		const b2Circle pocket = b2Shape_GetCircle(shapeId);
@@ -99,7 +99,7 @@ void dump_viewer_to_png(const CarromEvalResultViewer* viewer, const char* file_p
 	draw_limiter(&oc, viewer->strikerLimitWidth, viewer->strikerLimitOffCenter, scaleX, scaleY);
 
 	// pockets
-	for (int i = 0; i < viewer->numOfPockets; i++)
+	for (int i = 0; i < MAX_POCKET_CAPACITY; i++)
 	{
 		const b2Vec2 pocket = viewer->pocketsPosition[i];
 		const float radius = viewer->radius[CarromObjectType_Pocket];

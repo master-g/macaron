@@ -10,7 +10,6 @@ typedef struct CarromEvalResultViewer
 
 	float radius[CarromObjectType_Count];
 
-	int numOfPockets;
 	b2Vec2 pocketsPosition[MAX_POCKET_CAPACITY];
 
 	float worldWidth;

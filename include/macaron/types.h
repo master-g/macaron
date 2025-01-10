@@ -75,7 +75,14 @@ MACARON_API CarromObjectPhysicsDef CarromDefaultStrikerPhysicsDef(void);
 // Pocket def
 typedef struct CarromPocketDef
 {
+	// pocket radius
 	float radius;
+
+	// horizontal offset from center
+	float cornerOffsetX;
+
+	// vertical offset from center
+	float cornerOffsetY;
 
 } CarromPocketDef;
 
@@ -141,6 +148,7 @@ typedef struct CarromStrikerLimitDef
 	float centerOffset;
 	// maximum force when strike
 	float maxForce;
+
 } CarromStrikerLimitDef;
 
 MACARON_API CarromStrikerLimitDef CarromDefaultStrikerLimitDef(void);
@@ -158,21 +166,12 @@ typedef struct CarromGameDef
 	CarromPocketDef pocketDef;
 	// striker def
 	CarromStrikerLimitDef strikerLimitDef;
-	// pocket count
-	int32_t numOfPockets;
-	// pocket positions
-	CarromObjectPositionDef pocketsPositions[MAX_POCKET_CAPACITY];
-	// pucks count
-	int32_t numOfPucks;
-	// pucks positions
-	CarromObjectPositionDef pucksPositions[NUM_OF_OBJECTS];
+
 } CarromGameDef;
 
 MACARON_API CarromGameDef CarromDefaultGameDef(void);
 
-MACARON_API void CarromGameDef_PlacePucks(CarromGameDef* def);
-
-MACARON_API void CarromGameDef_PlacePockets(CarromGameDef* def);
+MACARON_API int CarromDefaultPuckPosition(float radius, float gap, int numOfPucks, CarromObjectPositionDef *positions);
 
 // Object instance
 typedef struct CarromObject
@@ -197,28 +196,12 @@ typedef struct CarromGameState
 	CarromObjectPhysicsDef strikerPhysicsDef;
 	// striker limit def
 	CarromStrikerLimitDef strikerLimitDef;
-
 	// world id in Box2D
 	b2WorldId worldId;
-
 	// wall bodyId
 	b2BodyId wallBodyId;
-
-	// number of pockets
-	int32_t numOfPockets;
-
-	// pocket position definitions
-	CarromObjectPositionDef pocketsPositionDefs[MAX_POCKET_CAPACITY];
-
 	// pockets
 	b2ShapeId pockets[MAX_POCKET_CAPACITY];
-
-	// number of object position definitions
-	int32_t numOfPosDefs;
-
-	// object position definitions
-	CarromObjectPositionDef objectPositionDefs[NUM_OF_OBJECTS];
-
 	// objects
 	CarromObject objects[NUM_OF_OBJECTS];
 
