@@ -61,6 +61,10 @@ void dump_game_state_to_png(const CarromGameState* state, const char* file_path)
 	for (int i = 0; i < PUCK_IDX_COUNT; i++)
 	{
 		const int idx = sPuckIndexes[i];
+		if (!b2Body_IsEnabled(state->objects[idx].bodyId))
+		{
+			continue;
+		}
 		const b2Vec2 pos = CarromGameState_GetPuckPosition(state, idx);
 		const CarromPuckColor color = MACARON_IDX_PUCK_COLOR(idx);
 		const int x = (int)(pos.x * scaleX + IMG_WIDTH / 2.f);

@@ -633,7 +633,7 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 			}
 			else
 			{
-				direction = normalX > 0.0f ? 1.0f : -1.0f;
+				direction = normalX > 0.0f ? -1.0f : 1.0f;
 			}
 
 			if (pushOut < 0.00001f || b2AbsFloat(normalX) < 0.00001f)
@@ -655,7 +655,7 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 			}
 			else
 			{
-				direction = normalY > 0.0f ? 1.0f : -1.0f;
+				direction = normalY > 0.0f ? -1.0f : 1.0f;
 			}
 
 			if (pushOut < 0.00001f || b2AbsFloat(normalY) < 0.00001f)

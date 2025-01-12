@@ -41,15 +41,22 @@ void sample_place_striker()
 {
 	const CarromGameDef def = load_game_def();
 	const CarromGameState state = new_game_state(&def);
-	for (int i = 0; i < 10; i++)
+
+	for (int i = 0; i < PUCK_IDX_COUNT; i++)
 	{
+		const int idx = sPuckIndexes[i];
+		b2Body_Disable(state.objects[idx].bodyId);
+	}
+
+	{
+		const int i = 0;
+		const int idx = sPuckIndexes[i];
 		b2Vec2 pos = b2Vec2_zero;
 		pos.y = state.strikerLimitDef.centerOffset;
-		const float sign = i % 2 == 0 ? -1.f : 1.f;
-		const float dist = state.strikerPhysicsDef.radius * 2.f + state.puckPhysicsDef.radius;
-		pos.x = sign * dist * (float)i / 2;
+		pos.x = state.puckPhysicsDef.radius;
 
-		CarromGameState_PlacePuckToPosUnsafe(&state, i, pos);
+		b2Body_Enable(state.objects[idx].bodyId);
+		CarromGameState_PlacePuckToPosUnsafe(&state, idx, pos);
 	}
 
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, b2Vec2_zero);
@@ -58,13 +65,15 @@ void sample_place_striker()
 
 	for (int i = 0; i < 10; i++)
 	{
+		const int idx = sPuckIndexes[i];
+
 		b2Vec2 pos = b2Vec2_zero;
 		pos.y = -state.strikerLimitDef.centerOffset;
 		const float sign = i % 2 == 0 ? -1.f : 1.f;
 		const float dist = state.strikerPhysicsDef.radius * 2.f + state.puckPhysicsDef.radius;
 		pos.x = sign * dist * (float)i / 2;
 
-		CarromGameState_PlacePuckToPosUnsafe(&state, i, pos);
+		CarromGameState_PlacePuckToPosUnsafe(&state, idx, pos);
 	}
 
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Bottom, b2Vec2_zero);
@@ -72,13 +81,14 @@ void sample_place_striker()
 
 	for (int i = 0; i < 10; i++)
 	{
+		const int idx = sPuckIndexes[i];
 		b2Vec2 pos = b2Vec2_zero;
 		pos.x = -state.strikerLimitDef.centerOffset;
 		const float sign = i % 2 == 0 ? -1.f : 1.f;
 		const float dist = state.strikerPhysicsDef.radius * 2.f + state.puckPhysicsDef.radius;
 		pos.y = sign * dist * (float)i / 2;
 
-		CarromGameState_PlacePuckToPosUnsafe(&state, i, pos);
+		CarromGameState_PlacePuckToPosUnsafe(&state, idx, pos);
 	}
 
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Left, b2Vec2_zero);
@@ -86,13 +96,14 @@ void sample_place_striker()
 
 	for (int i = 0; i < 10; i++)
 	{
+		const int idx = sPuckIndexes[i];
 		b2Vec2 pos = b2Vec2_zero;
 		pos.x = state.strikerLimitDef.centerOffset;
 		const float sign = i % 2 == 0 ? -1.f : 1.f;
 		const float dist = state.strikerPhysicsDef.radius * 2.f + state.puckPhysicsDef.radius;
 		pos.y = sign * dist * (float)i / 2;
 
-		CarromGameState_PlacePuckToPosUnsafe(&state, i, pos);
+		CarromGameState_PlacePuckToPosUnsafe(&state, idx, pos);
 	}
 
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Right, b2Vec2_zero);
@@ -393,9 +404,9 @@ int main(int argc, char** argv)
 	// sample_userdata();
 	// sample_eval();
 	// sample_eval_with_picture_output();
-	// sample_place_striker();
+	sample_place_striker();
 	// sample_eval_any(CarromTablePosition_Left);
-	sample_apply_velocity();
+	// sample_apply_velocity();
 
 	return 0;
 }
