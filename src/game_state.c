@@ -722,7 +722,7 @@ b2Vec2 CarromGameState_PlaceStriker(const CarromGameState* state, const CarromTa
 					newPos = after;
 				}
 			}
-			else if (tablePos == CarromTablePosition_Left || CarromTablePosition_Right)
+			else if (tablePos == CarromTablePosition_Left || tablePos == CarromTablePosition_Right)
 			{
 				newPos.y += step * direction;
 				if (newPos.y < -maxVerticalRange)
