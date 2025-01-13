@@ -227,10 +227,10 @@ MACARON_API void CarromGameState_SetPuckPosition(const CarromGameState* state, c
                                                  const CarromObjectPositionDef* positions)
 {
 	MACARON_ASSERT(state != NULL);
-	MACARON_ASSERT(size > 0 && size <= PUCK_IDX_COUNT);
+	MACARON_ASSERT(size > 0);
 	MACARON_ASSERT(positions != NULL);
 
-	if (state == NULL || size <= 0 || size > PUCK_IDX_COUNT || positions == NULL)
+	if (state == NULL || size <= 0 || positions == NULL)
 	{
 		return;
 	}
@@ -238,6 +238,11 @@ MACARON_API void CarromGameState_SetPuckPosition(const CarromGameState* state, c
 	for (int i = 0; i < size; i++)
 	{
 		const CarromObjectPositionDef posDef = positions[i];
+		if (posDef.index == IDX_STRIKER)
+		{
+			CarromGameState_PlaceStrikerUnsafe(state, posDef.position);
+			continue;
+		}
 		if (!MACARON_IS_VALID_PUCK_IDX(posDef.index))
 		{
 			continue;
