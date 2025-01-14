@@ -98,9 +98,10 @@ MACARON_API b2Vec2 CarromGameState_PlacePuckToPos(const CarromGameState* state, 
  * @param state game state
  * @param index puck index
  * @param pos desired position
+ * @param enable enable the puck
  *
  */
-MACARON_API void CarromGameState_PlacePuckToPosUnsafe(const CarromGameState* state, int index, b2Vec2 pos);
+MACARON_API void CarromGameState_PlacePuckToPosUnsafe(const CarromGameState* state, int index, b2Vec2 pos, bool enable);
 
 /**
  * @brief Place pucks to the center of the table

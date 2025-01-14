@@ -438,13 +438,20 @@ b2Vec2 CarromGameState_PlacePuckToPos(const CarromGameState* state, const int in
 	return CarromGameState_PlacePuck(state, puck, step);
 }
 
-void CarromGameState_PlacePuckToPosUnsafe(const CarromGameState* state, const int index, const b2Vec2 pos)
+void CarromGameState_PlacePuckToPosUnsafe(const CarromGameState* state, const int index, const b2Vec2 pos, bool enable)
 {
 	MACARON_ASSERT(state != NULL);
 	MACARON_ASSERT(MACARON_IS_VALID_PUCK_IDX(index));
 
 	const CarromObject* puck = &state->objects[index];
 	b2Body_SetTransform(puck->bodyId, pos, b2Rot_identity);
+	if (enable)
+	{
+		b2Body_Enable(puck->bodyId);
+	} else
+	{
+		b2Body_Disable(puck->bodyId);
+	}
 }
 
 b2Vec2 CarromGameState_PlacePuckToCenter(const CarromGameState* state, const int index)
