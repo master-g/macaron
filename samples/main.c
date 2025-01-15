@@ -56,7 +56,7 @@ void sample_place_striker()
 		pos.x = state.puckPhysicsDef.radius;
 
 		b2Body_Enable(state.objects[idx].bodyId);
-		CarromGameState_PlacePuckToPosUnsafe(&state, idx, pos);
+		CarromGameState_PlacePuckToPosUnsafe(&state, idx, pos, true);
 	}
 
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Top, b2Vec2_zero);
@@ -73,7 +73,7 @@ void sample_place_striker()
 		const float dist = state.strikerPhysicsDef.radius * 2.f + state.puckPhysicsDef.radius;
 		pos.x = sign * dist * (float)i / 2;
 
-		CarromGameState_PlacePuckToPosUnsafe(&state, idx, pos);
+		CarromGameState_PlacePuckToPosUnsafe(&state, idx, pos, true);
 	}
 
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Bottom, b2Vec2_zero);
@@ -88,7 +88,7 @@ void sample_place_striker()
 		const float dist = state.strikerPhysicsDef.radius * 2.f + state.puckPhysicsDef.radius;
 		pos.y = sign * dist * (float)i / 2;
 
-		CarromGameState_PlacePuckToPosUnsafe(&state, idx, pos);
+		CarromGameState_PlacePuckToPosUnsafe(&state, idx, pos, true);
 	}
 
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Left, b2Vec2_zero);
@@ -103,7 +103,7 @@ void sample_place_striker()
 		const float dist = state.strikerPhysicsDef.radius * 2.f + state.puckPhysicsDef.radius;
 		pos.y = sign * dist * (float)i / 2;
 
-		CarromGameState_PlacePuckToPosUnsafe(&state, idx, pos);
+		CarromGameState_PlacePuckToPosUnsafe(&state, idx, pos, true);
 	}
 
 	CarromGameState_PlaceStriker(&state, CarromTablePosition_Right, b2Vec2_zero);
@@ -373,7 +373,7 @@ void sample_apply_velocity()
 	CarromGameState_PlaceStrikerUnsafe(&state, pos);
 
 	b2Vec2 velocity = b2Vec2_zero;
-	velocity.y = 60.0f;
+	velocity.y = 70.0f;
 
 	CarromGameState_ApplyVelocityToStriker(&state, velocity);
 
@@ -398,15 +398,58 @@ void sample_apply_velocity()
 	system("magick -delay 2 -loop 0 output/*.png output.gif");
 }
 
+void sample_hit_pocket_index()
+{
+	CarromEvalResult r = {0};
+	const int bytes = sizeof(r);
+	const float kib = bytes / 1024.0f;
+	const float mib = kib / 1024.0f;
+	printf("size: %d bytes, %.3f KiB, %.3f MiB\n", bytes, kib, mib);
+
+	const CarromGameDef def = load_game_def();
+	const CarromGameState state = new_game_state(&def);
+
+	b2Vec2 pos = b2Vec2_zero;
+	pos.y = -def.worldDef.height / 2 + def.strikerPhysicsDef.radius * 2;
+	CarromGameState_PlaceStrikerUnsafe(&state, pos);
+
+	b2Vec2 velocity = b2Vec2_zero;
+	velocity.y = 70.0f;
+
+	CarromGameState_ApplyVelocityToStriker(&state, velocity);
+
+	CarromEvalResultViewer viewer = CarromEvalResultViewerCreate(&state);
+
+	const CarromEvalResult result = CarromGameState_Eval(&state, 0);
+	printf("frame count: %d, pucksHitPocket: %d\n", result.numFrames, result.pucksHitPocket);
+
+	for (int i = 0; i < result.numFrames; i++)
+	{
+		const CarromFrame* frame = &result.frames[i];
+		// if (frame->pucksHitPocket > 0)
+		// {
+			for (int j = 0; j < NUM_OF_OBJECTS; j++)
+			{
+				const CarromObjectSnapshot *snapshot = &frame->snapshots[j];
+				if (MACARON_IS_VALID_OBJ_IDX(snapshot->index) && snapshot->hitPocket)
+                {
+                    printf("puck %d hit index %d\n", snapshot->index, snapshot->hitPocketIndex);
+                }
+			}
+		// }
+	}
+}
+
 int main(int argc, char** argv)
 {
 	// sample_take_snapshot();
 	// sample_userdata();
 	// sample_eval();
 	// sample_eval_with_picture_output();
-	sample_place_striker();
+	// sample_place_striker();
 	// sample_eval_any(CarromTablePosition_Left);
 	// sample_apply_velocity();
+	sample_hit_pocket_index();
 
 	return 0;
 }
